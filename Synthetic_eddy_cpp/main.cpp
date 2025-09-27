@@ -83,7 +83,7 @@ int main(){
 	double z_min = 0.0;
 	double z_max = 0.03;
 
-	size_t n_y = 200;
+	size_t n_y = 50;
 	size_t n_z = 150;
 
 	Array<double> y_pos;
@@ -134,9 +134,10 @@ int main(){
 
 
 	double u0 = 100;
-	double dt = 0.00001;
+	double dt = 0.000002;
 
 	ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta);
+	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, delta);
 
 	std::cout << region.eddies.size << std::endl;
 	std::cout << region.d_max << std::endl;
@@ -168,7 +169,7 @@ int main(){
 	
 	for (size_t i{ 0 }; i < iters; i++) {
 		region.increment_eddies();
-		region.print_flucts(i, "ISEM1_test");
+		region.print_flucts(i, "ISEM_test");
 		std::cout << i << std::endl;
 	}
 

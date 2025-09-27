@@ -131,6 +131,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.h" />
+    <ClInclude Include="region.h" />
+    <ClInclude Include="DFSEM_region.h" />
     <ClInclude Include="Eddy.h" />
     <ClInclude Include="ISEM1_region.h" />
     <ClInclude Include="oSEM_region.h" />
