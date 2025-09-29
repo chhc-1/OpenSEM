@@ -3,6 +3,7 @@
 #include "Array.h"
 #include "Eddy.h"
 #include "region.h"
+#include "oSEM_eddy.h"
 
 #include <climits>
 #include <malloc.h>
@@ -18,13 +19,46 @@
 
 class oSEM_region : public region {
 public:
+	Array<oSEM_eddy> eddies;
+	double L; // turbulence length scale
+	
 	oSEM_region(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet, const Array<double>& _z_inlet, const double& _radius, const double& _delta)
 		: region(_u0, _dt, _x_inlet, _y_inlet, _z_inlet, _radius, _delta)
 	{
+		size_t N = trunc(vol / pow(_radius, 3)); // use representative radius to determine number of eddies
+		eddies.resize({ N });
 
+		vf_scaling_factor = 1 / pow(eddies.size, 0.5);
+
+		instantiate_eddies();
+
+		L = 0.2; // temporary value
+
+		base_radius = std::max(std::min(L, 0.41 * _delta), d_max);
+		
+		//eps_temp.resize({ 3 });
 	}
 
-	void increment_eddy(eddy& _eddy) {
+	void increment_eddies() {
+		u_prime.set(0);
+		v_prime.set(0);
+		w_prime.set(0);
+
+		for (size_t idx{ 0 }; idx < eddies.size; idx++) {
+			increment_eddy(eddies(idx));
+		}
+
+		for (size_t i{ 0 }; i < u_prime.size; i++) { // moved scaling factor for velocity fluctuations outside to reduce number of long operations
+			//std::cout << vf_scaling_factor;
+			//std::cout << u_prime(i) << std::endl;
+
+			u_prime(i) *= vf_scaling_factor;
+			v_prime(i) *= vf_scaling_factor;
+			w_prime(i) *= vf_scaling_factor;
+		}
+	}
+
+	void increment_eddy(oSEM_eddy& _eddy) {
 		// convects eddies forwards
 		in_box = _eddy.convect(x_max);
 		// resets eddies if eddy is past outlet of synthetic eddy region
@@ -32,21 +66,26 @@ public:
 			y_temp = y_rand(mt);
 			z_temp = z_rand(mt);
 			radius_temp = compute_radius(y_temp, z_temp); // need expression for new radius
-			_eddy.reset(x_min, y_temp, z_temp, radius_temp, vol_sqrt, u0, dt, y_inlet, z_inlet);
+			// evaluate new value of epsilon
+			epsilon_direction();
+			_eddy.reset(x_min, y_temp, z_temp, radius_temp, vol_sqrt, u0, dt, y_inlet, z_inlet, eps_temp);
 		}
-
-		// evaluate new value of epsilon
-		_eddy.epsilon_direction(eps_rand, mt, eps_map); // 3 heap allocations here...
 
 		//std::cout << y_inlet.size << std::endl;
 		// determines velocity fluctuation component contribution from given eddy
+
+		double temp_x = x_inlet(0, 0); // assume inlet is planar constant x
+
 		for (size_t i{ 0 }; i < _eddy.num_nodes; i++) {
 			// evaluate shape function for eddy at given node
 			_eddy.shape = _eddy.shape_scaling_factor;
 
-			_eddy.shape *= _eddy.shape_fn(x_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(0));
-			_eddy.shape *= _eddy.shape_fn(y_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(1));
-			_eddy.shape *= _eddy.shape_fn(z_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(2));
+			//_eddy.shape *= _eddy.shape_fn(x_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(0));
+			//_eddy.shape *= _eddy.shape_fn(y_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(1));
+			//_eddy.shape *= _eddy.shape_fn(z_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(2));
+			_eddy.shape *= _eddy.shape_fn(temp_x, _eddy.position(0));
+			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 0), _eddy.position(1));
+			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 1), _eddy.position(2));
 
 			u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a11(i) * _eddy.epsilon(0) * _eddy.shape);
 			v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a21(i) * _eddy.epsilon(0) + a22(i) * _eddy.epsilon(1)) * _eddy.shape;
@@ -60,6 +99,23 @@ public:
 	}
 
 private:
+	void instantiate_eddies() {
+		std::uniform_real_distribution<double> x_dist = std::uniform_real_distribution<double>(x_min, x_max);
+
+		for (size_t i{ 0 }; i < eddies.size; i++) {
+			eddies(i) = oSEM_eddy(max_nodes);
+
+			x_temp = x_dist(mt);
+			y_temp = y_rand(mt);
+			z_temp = z_rand(mt);
+			radius_temp = compute_radius(y_temp, z_temp);
+
+			// evaluate new value of epsilon
+			epsilon_direction();
+
+			eddies(i).reset(x_temp, y_temp, z_temp, radius_temp, vol_sqrt, u0, dt, y_inlet, z_inlet, eps_temp);
+		}
+	}
 
 public:
 };

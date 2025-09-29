@@ -38,5 +38,14 @@
     <ClInclude Include="region.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="oSEM_eddy.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISEM1_eddy.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DFSEM_eddy.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

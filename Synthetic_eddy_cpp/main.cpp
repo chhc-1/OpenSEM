@@ -1,7 +1,11 @@
 #include "Array.h"
 #include "Eddy.h"
+#include "oSEM_eddy.h"
 #include "oSEM_region.h"
+#include "ISEM1_eddy.h"
 #include "ISEM1_region.h"
+#include "DFSEM_eddy.h"
+#include "DFSEM_region.h"
 
 #include <cstdlib>
 #include <random>
@@ -9,6 +13,7 @@
 #include <string>
 #include <iomanip>
 #include <chrono>
+#include <fstream>
 
 struct AllocationTracker {
 public:
@@ -83,7 +88,7 @@ int main(){
 	double z_min = 0.0;
 	double z_max = 0.03;
 
-	size_t n_y = 50;
+	size_t n_y = 50; // 200;
 	size_t n_z = 150;
 
 	Array<double> y_pos;
@@ -108,8 +113,9 @@ int main(){
 		}
 	}
 
-	double min_rad1 = 0.05 * delta;
+	//double min_rad1 = 0.05 * delta;
 	double rep_rad1 = 0.2 * delta; // 0.2 * delta;
+	double min_rad1 = 0.1 * delta;
 	//double max_rad1 = 0.286 * delta;
 	double max_rad1 = 0.41 * delta;
 
@@ -123,26 +129,17 @@ int main(){
 	//size_t arr[] = {1 ,3 ,5};
 	//size_t (*ptr)[3] = &(arr);
 
-
-
-
-	//const size_t temp1{ 102 };
-	
-	//std::cout << std::to_string(temp1) << std::endl;
-
-	//oSEM_region region = oSEM_region(100, 0.000001, x_pos, y_plane, z_plane, rep_rad1, delta);
-
-
-	double u0 = 100;
+	double u0 = 150; // 100;
 	double dt = 0.000002;
 
-	ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta);
+	//ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta);
 	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, delta);
+	DFSEM_region region = DFSEM_region(u0, dt, x_pos, y_plane, z_plane, min_rad1, rep_rad1, max_rad1, delta);
 
 	std::cout << region.eddies.size << std::endl;
 	std::cout << region.d_max << std::endl;
 
-	double TI1 = 0.1;
+	double TI1 = 0.01;
 
 	region.set_HIT_RST(TI1);
 
@@ -166,10 +163,17 @@ int main(){
 
 	size_t iters{ 1000 };
 
+	std::ofstream file;
+
+	file.open("flow_statistics.txt");
+	file << "u0: " << region.u0 << std::endl;
+	file << "turbulence intensity: " << TI1 << std::endl;
+	file.close();
+
 	
 	for (size_t i{ 0 }; i < iters; i++) {
 		region.increment_eddies();
-		region.print_flucts(i, "ISEM_test");
+		region.print_flucts(i, "DFSEM_test");
 		std::cout << i << std::endl;
 	}
 

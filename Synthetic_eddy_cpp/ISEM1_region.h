@@ -4,6 +4,7 @@
 #include "Array.h"
 #include "Eddy.h"
 #include "region.h"
+#include "ISEM1_eddy.h"
 
 #include <climits>
 #include <malloc.h>
@@ -19,6 +20,8 @@
 
 class ISEM1_region : public region {
 public:
+	Array<ISEM1_eddy> eddies;
+
 	ISEM1_region(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet, const Array<double>& _z_inlet, const double& rep_radius, const double& max_radius, const double& _delta) 
 		: region(_u0, _dt, _x_inlet, _y_inlet, _z_inlet, max_radius, _delta) // use max radius as "base_radius" since base_radius used to determine SE region size
 	{
@@ -35,6 +38,8 @@ public:
 		eddies.resize({ N });
 
 		vf_scaling_factor = 1 / pow(eddies.size, 0.5);
+
+		//eps_temp.resize({ 3 }); // temporary array for epsilon values
 
 		instantiate_eddies();
 	}
@@ -58,7 +63,7 @@ public:
 		}
 	}
 
-	void increment_eddy(eddy& _eddy) {
+	void increment_eddy(ISEM1_eddy& _eddy) {
 		// convects eddies forwards
 		in_box = _eddy.convect(x_max);
 		// resets eddies if eddy is past outlet of synthetic eddy region
@@ -67,20 +72,25 @@ public:
 			z_temp = z_rand(mt);
 			radius_temp = compute_radius(y_temp, z_temp); // need expression for new radius
 			u_temp = velocity_fn(y_temp, z_temp);
-			_eddy.reset(_eddy.position(0) - x_size, y_temp, z_temp, radius_temp, vol_sqrt, u_temp, dt, y_inlet, z_inlet);
+			// evaluate new value of epsilon
+			epsilon_direction();
+
+			_eddy.reset(_eddy.position(0) - x_size, y_temp, z_temp, radius_temp, vol_sqrt, u_temp, dt, y_inlet, z_inlet, eps_temp);
 		}
 
-		// evaluate new value of epsilon
-		_eddy.epsilon_direction(eps_rand, mt, eps_map);
+		double temp_x = x_inlet(0, 0); // assume inlet is planar constant x
 
 		// determines velocity fluctuation component contribution from given eddy
 		for (size_t i{ 0 }; i < _eddy.num_nodes; i++) {
 			// evaluate shape function for eddy at given node
 			_eddy.shape = _eddy.shape_scaling_factor;
 
-			_eddy.shape *= _eddy.shape_fn(x_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(0));
-			_eddy.shape *= _eddy.shape_fn(y_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(1));
-			_eddy.shape *= _eddy.shape_fn(z_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(2));
+			//_eddy.shape *= _eddy.shape_fn(x_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(0));
+			//_eddy.shape *= _eddy.shape_fn(y_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(1));
+			//_eddy.shape *= _eddy.shape_fn(z_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(2));
+			_eddy.shape *= _eddy.shape_fn(temp_x, _eddy.position(0));
+			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 0), _eddy.position(1));
+			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 1), _eddy.position(2));
 
 			u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a11(i) * _eddy.epsilon(0) * _eddy.shape);
 			v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a21(i) * _eddy.epsilon(0) + a22(i) * _eddy.epsilon(1)) * _eddy.shape;
@@ -97,6 +107,7 @@ public:
 		}
 		//return (y > 0.6 * delta) ? (- 0.59 * y + 0.64 * delta) : (0.31 * y + 0.1 * delta);
 	}
+
 	
 private:
 	double u_temp;
@@ -105,14 +116,19 @@ private:
 		std::uniform_real_distribution<double> x_dist = std::uniform_real_distribution<double>(x_min, x_max);
 
 		for (size_t i{ 0 }; i < eddies.size; i++) {
-			eddies(i) = eddy(max_nodes);
+			eddies(i) = ISEM1_eddy(max_nodes);
 
 			x_temp = x_dist(mt);
 			y_temp = y_rand(mt);
 			z_temp = z_rand(mt);
 			radius_temp = compute_radius(y_temp, z_temp);
+			u_temp = velocity_fn(y_temp, z_temp);
 
-			eddies(i).reset(x_temp, y_temp, z_temp, radius_temp, vol_sqrt, u0, dt, y_inlet, z_inlet);
+			// evaluate new value of epsilon
+			epsilon_direction();
+
+
+			eddies(i).reset(x_temp, y_temp, z_temp, radius_temp, vol_sqrt, u_temp, dt, y_inlet, z_inlet, eps_temp);
 		}
 	}
 
@@ -124,9 +140,12 @@ private:
 			return u0;
 		}
 	}
+
 public:
 
 };
+
+
 
 /*
 class ISEM1_region {

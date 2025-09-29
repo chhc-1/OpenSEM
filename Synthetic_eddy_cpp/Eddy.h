@@ -17,38 +17,40 @@
 
 // new version of eddy (stores nodes to check internally instead of sweeping entire grid each iteration)
 
-
+// base version of eddy
+// for sub classes of eddy: shape functions need to be implemented, reset functions need to be implemented
 struct eddy {
 public:
     Array<double> position;
     Array<int> epsilon; // -1 or 1
     double shape_scaling_factor; // scaling factor in shape function
-    double radius;
+    //double radius; radius should now be a member variable declared in each sub version of eddy
     double shape;
     double increment; // streamwise velocity
+
+    Array<double> nodes_pos; // array containing actual node positions -> store to increase speed as memory is now localised?
 
     Array<size_t> nodes; // array containing nodes to check each iteration, fixed size - use num_nodes to control how many nodes are required
     // nodes -> num_nodes x 2 size - column 1 contains y index, column 2 contains z index
     size_t num_nodes; // number of nodes to check each iteration
     // can add array for node locations -> then all memory accessed is in same location?
 
+    double theta_magn;
+
     eddy(const size_t& max_nodes) {
         position = Array<double>({ 3 });
         epsilon = Array<int>({ 3 });
         nodes.resize({ max_nodes, 2 });
+        nodes_pos.resize({ max_nodes, 2 });
         num_nodes = 0;
     }
 
-
-    // calculate epsilon
-    void epsilon_direction(std::uniform_int_distribution<int>& eps_dist, std::mt19937& urng, std::map<int, int>& eps_map) {
-        // 3 allocs per function call... (not due to map) -> likely due to number generation?
-        // not due to number generation alone
-        for (size_t i{ 0 }; i < epsilon.shape[0]; i++) {
-            epsilon(i) = eps_map[eps_dist(urng)];
-        }
+    bool convect(const double& x_max) {
+        position(0) += increment;
+        return (position(0) < x_max) ? true : false;
     }
 
+    /*
     void reset(const double& new_x, const double& new_y, const double& new_z, const double& new_r, const double& volume_sqrt, const double& u, const double& dt, const Array<double>& y_plane, const Array<double>& z_plane) {
         
         // reset eddy position
@@ -75,13 +77,10 @@ public:
         }
 
 
-    }
+    }*/
 
-    bool convect(const double& x_max) {
-        position(0) += increment;
-        return (position(0) < x_max) ? true : false;
-    }
 
+    /*
     double shape_fn(const double& ref_pos, const double& eddy_pos) {
         theta = (ref_pos - eddy_pos) / radius;
 
@@ -92,11 +91,10 @@ public:
             return 0;
         }
 
-    }
+    }*/
 
-private:
+protected:
     double theta;
-    double theta_magn;
     bool in_box;
 public:
 
