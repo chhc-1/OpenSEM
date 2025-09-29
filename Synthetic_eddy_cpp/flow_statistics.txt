@@ -1,2 +1,0 @@
-u0: 150
-turbulence intensity: 0.01
