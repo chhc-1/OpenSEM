@@ -132,12 +132,9 @@ int main(){
 	double u0 = 150; // 100;
 	double dt = 0.000002;
 
-	//ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta);
-	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, delta);
-	DFSEM_region region = DFSEM_region(u0, dt, x_pos, y_plane, z_plane, min_rad1, rep_rad1, max_rad1, delta);
-
-	std::cout << region.eddies.size << std::endl;
-	std::cout << region.d_max << std::endl;
+	ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta);
+	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, max_rad1, delta);
+	//DFSEM_region region = DFSEM_region(u0, dt, x_pos, y_plane, z_plane, min_rad1, rep_rad1, max_rad1, delta);
 
 	double TI1 = 0.01;
 
@@ -154,12 +151,19 @@ int main(){
 
 	//int test1;
 
-	//_tracker.print_allocs();
+	
 	//test1 = dist3(urng);
 	//_tracker.print_allocs();
 
+	std::cout << region.eddies.size << std::endl;
 
 	//std::cout << region.a11(0) << std::endl;
+
+	//std::cout << region.vf_scaling_factor << std::endl;
+	//std::cout << region.eddies(0).shape_scaling_factor << std::endl;
+	//std::cout << region.vol << ", " << pow(region.vol, 0.5) << ", " << region.vol_sqrt << std::endl;
+	//std::cout << region.vol / pow(rep_rad1, 3) << std::endl;
+	//std::cout << region.vf_scaling_factor * region.eddies(0).shape_scaling_factor << std::endl;
 
 	size_t iters{ 1000 };
 
@@ -170,12 +174,12 @@ int main(){
 	file << "turbulence intensity: " << TI1 << std::endl;
 	file.close();
 
-	
 	for (size_t i{ 0 }; i < iters; i++) {
 		region.increment_eddies();
-		region.print_flucts(i, "DFSEM_test");
+		region.print_flucts(i, "ISEM_test");
 		std::cout << i << std::endl;
 	}
+
 
 	/*
 	for (size_t i{ 0 }; i < region.a11.size; i++) {

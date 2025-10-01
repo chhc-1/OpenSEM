@@ -83,7 +83,8 @@ public:
 		// need method to evaluate max nodes
 		// max_nodes = ;
 		//max_nodes = 2000;
-		max_nodes = 1000;//2000;
+		//max_nodes = 1000;//2000;
+		max_nodes = 500;
 		//instantiate_eddies();
 	}
 	/*

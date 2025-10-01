@@ -31,7 +31,7 @@ public:
 		position(1) = new_y;
 		position(2) = new_z;
 		radius = new_r;
-		shape_scaling_factor = volume_sqrt / pow(new_r, 3 / 2);
+		shape_scaling_factor = volume_sqrt / pow(new_r, 1.5);
 		increment = u * dt;
 
 		// insert nodes that need to be checked now

@@ -25,16 +25,16 @@ public:
 	oSEM_region(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet, const Array<double>& _z_inlet, const double& _radius, const double& _delta)
 		: region(_u0, _dt, _x_inlet, _y_inlet, _z_inlet, _radius, _delta)
 	{
+		L = 0.2; // temporary value
+		base_radius = std::max(std::min(L, 0.41 * _delta), d_max);
+
 		size_t N = trunc(vol / pow(_radius, 3)); // use representative radius to determine number of eddies
 		eddies.resize({ N });
 
-		vf_scaling_factor = 1 / pow(eddies.size, 0.5);
+		vf_scaling_factor = 1 / pow(N, 0.5);
 
 		instantiate_eddies();
 
-		L = 0.2; // temporary value
-
-		base_radius = std::max(std::min(L, 0.41 * _delta), d_max);
 		
 		//eps_temp.resize({ 3 });
 	}
@@ -90,6 +90,10 @@ public:
 			u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a11(i) * _eddy.epsilon(0) * _eddy.shape);
 			v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a21(i) * _eddy.epsilon(0) + a22(i) * _eddy.epsilon(1)) * _eddy.shape;
 			w_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a31(i) * _eddy.epsilon(0) + a32(i) * _eddy.epsilon(1) + a33(i) * _eddy.epsilon(2)) * _eddy.shape;
+
+			//u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon(0) * _eddy.shape;
+			//v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon(1) * _eddy.shape;
+			//w_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon(2) * _eddy.shape;
 		}
 
 	}
