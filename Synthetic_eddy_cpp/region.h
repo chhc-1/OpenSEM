@@ -165,10 +165,43 @@ public:
 	void set_RST(Array<double> r11, Array<double> r21, Array<double> r22, Array<double> r31, Array<double> r32, Array<double> r33) {
 		for (size_t i{ 0 }; i < r11.size; i++) {
 			a11(i) = pow(r11(i), 0.5);
-			a21(i) = r21(i) / a11(i);
+			if (a11(i) == 0) {
+				if (r21(i) == 0) {
+					a21(i) = 0;
+				}
+				else {
+					std::cout << "div 0 in evaluation of a21 term. continue?" << std::endl;
+					std::cin.get();
+				}
+			}
+			else {
+				a21(i) = r21(i) / a11(i);
+			}
 			a22(i) = pow(r22(i) - a21(i) * a21(i), 0.5);
-			a31(i) = r31(i) / a11(i);
-			a32(i) = (r32(i) - a31(i) * a21(i)) / a22(i);
+			if (a11(i) == 0) {
+				if (r31(i) == 0) {
+					a31(i) = 0;
+				}
+				else {
+					std::cout << "div 0 in evaluation of a31 term. continue?" << std::endl;
+					std::cin.get();
+				}
+			}
+			else {
+				a31(i) = r31(i) / a11(i);
+			}
+			if (a22(i) == 0) {
+				if (r32(i) == 0) {
+					a32(i) = 0;
+				}
+				else {
+					std::cout << "div 0 in evaluation of a32 term. continue?" << std::endl;
+					std::cin.get();
+				}
+			}
+			else {
+				a32(i) = (r32(i) - a31(i) * a21(i)) / a22(i);
+			}
 			a33(i) = pow(r33(i) - a31(i) * a31(i) - a32(i) * a32(i), 0.5);
 			tke(i) = 0.5 * (r11(i) + r22(i) + r33(i));
 		}

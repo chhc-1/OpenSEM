@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="Array.h" />
     <ClInclude Include="DFSEM_eddy.h" />
+    <ClInclude Include="interpolate.h" />
     <ClInclude Include="ISEM1_eddy.h" />
     <ClInclude Include="oSEM_eddy.h" />
     <ClInclude Include="region.h" />
@@ -139,6 +140,9 @@
     <ClInclude Include="Eddy.h" />
     <ClInclude Include="ISEM1_region.h" />
     <ClInclude Include="oSEM_region.h" />
+    <ClInclude Include="target_stats.h" />
+    <ClInclude Include="XSEM_eddy.h" />
+    <ClInclude Include="XSEM_region.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

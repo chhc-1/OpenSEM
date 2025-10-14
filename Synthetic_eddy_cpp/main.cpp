@@ -6,6 +6,8 @@
 #include "ISEM1_region.h"
 #include "DFSEM_eddy.h"
 #include "DFSEM_region.h"
+#include "interpolate.h"
+#include "target_stats.h"
 
 #include <cstdlib>
 #include <random>
@@ -80,13 +82,13 @@ int main(){
 	}
 	*/
 
-	double delta = 0.004;
+	double delta = 0.0077;
 
 	double x_pos = 0.0;
 	double y_min = 0.0;
 	double y_max = 1.4 * delta;
 	double z_min = 0.0;
-	double z_max = 0.03;
+	double z_max = 0.05;
 
 	size_t n_y = 50; // 200;
 	size_t n_z = 150;
@@ -119,35 +121,24 @@ int main(){
 	//double max_rad1 = 0.286 * delta;
 	double max_rad1 = 0.41 * delta;
 
-	/*
-	Array<double> temp1;
-	temp1.resize(y_plane.shape, y_plane.ndims);
-	std::cout << sizeof(y_plane.shape[0]) << std::endl;
-	std::cout << sizeof(&(y_plane.shape)) / sizeof(size_t) << std::endl;
-	std::cout << temp1.shape[0] << ", " << temp1.shape[1] << std::endl;
-	*/
-	//size_t arr[] = {1 ,3 ,5};
-	//size_t (*ptr)[3] = &(arr);
-
-	double u0 = 150; // 100;
+	double u0 = 823.6; // 100;
 	double dt = 0.000002;
 
 	ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta);
 	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, max_rad1, delta);
 	//DFSEM_region region = DFSEM_region(u0, dt, x_pos, y_plane, z_plane, min_rad1, rep_rad1, max_rad1, delta);
 
-	double TI1 = 0.01;
+	double TI1 = 0.10;
 
 	region.set_HIT_RST(TI1);
+	//std::cout << region.C1 << std::endl; // DFSEM only
+
 
 	//_tracker.print_allocs();
 	//region.increment_eddies();
 	//_tracker.print_allocs();
 	//region.increment_eddy(region.eddies(0));
 	//_tracker.print_allocs();
-
-	//std::uniform_int_distribution<int> dist3 = std::uniform_int_distribution<int>(0, 1);
-	//std::mt19937 urng = std::mt19937(1729);
 
 	//int test1;
 
@@ -159,20 +150,103 @@ int main(){
 
 	//std::cout << region.a11(0) << std::endl;
 
-	//std::cout << region.vf_scaling_factor << std::endl;
-	//std::cout << region.eddies(0).shape_scaling_factor << std::endl;
-	//std::cout << region.vol << ", " << pow(region.vol, 0.5) << ", " << region.vol_sqrt << std::endl;
-	//std::cout << region.vol / pow(rep_rad1, 3) << std::endl;
-	//std::cout << region.vf_scaling_factor * region.eddies(0).shape_scaling_factor << std::endl;
+	//_tracker.print_allocs();
+	//region.increment_eddies();
+	//_tracker.print_allocs();
+	//Array<double> arr1;
+	//arr1.LinRange(0, 2 * M_PI, 1000);
+	//Array<double> arr2;
+	//arr2.LinRange(0, 4 * M_PI, 1000);
 
-	size_t iters{ 1000 };
+	//interpolator<double> interp1 = interpolator<double>(arr1, arr2);
+
+	//std::cout << interp1(M_PI) << std::endl;
+
+	size_t dpoints{260};
+	Array<double> y_interp_arr = Array<double>({ dpoints });
+	Array<double> uu_interp_arr = Array<double>({ dpoints });
+	Array<double> vv_interp_arr = Array<double>({ dpoints });
+	Array<double> ww_interp_arr = Array<double>({ dpoints });
+	Array<double> uv_interp_arr = Array<double>({ dpoints });
+
+	std::cout << dpoints << std::endl;
+
+	y_interp_arr.array1 = y_inp;
+	uu_interp_arr.array1 = uu_inp;
+	vv_interp_arr.array1 = vv_inp;
+	ww_interp_arr.array1 = ww_inp;
+	uv_interp_arr.array1 = uv_inp;
+
+
+	/*
+	for (size_t i{ 0 }; i < dpoints; i++) {
+		y_interp_arr(i) = y_inp[i];
+		uu_interp_arr(i) = uu_inp[i];
+		vv_interp_arr(i) = vv_inp[i];
+		ww_interp_arr(i) = ww_inp[i];
+		uv_interp_arr(i) = uv_inp[i];
+	}
+	*/
+
+	interpolator<double> uu_interp(y_interp_arr, uu_interp_arr);
+	interpolator<double> vv_interp(y_interp_arr, vv_interp_arr);
+	interpolator<double> ww_interp(y_interp_arr, ww_interp_arr);
+	interpolator<double> uv_interp(y_interp_arr, uv_interp_arr);
+
+	Array<double> r11({ n_y, n_z });
+	Array<double> r21({ n_y, n_z });
+	Array<double> r22({ n_y, n_z });
+	Array<double> r31({ n_y, n_z });
+	Array<double> r32({ n_y, n_z });
+	Array<double> r33({ n_y, n_z });
+
+	for (size_t j{ 0 }; j < n_y; j++) {
+		for (size_t k{ 0 }; k < n_z; k++) {
+			r11(j, k) = uu_interp(y_pos(j));
+			r21(j, k) = uv_interp(y_pos(j));
+			r22(j, k) = vv_interp(y_pos(j));
+			r31(j, k) = 0;
+			r32(j, k) = 0;
+			r33(j, k) = ww_interp(y_pos(j));
+		}
+
+		//std::cout << y_pos(j) << ", " << uu_interp(y_pos(j)) << std::endl;
+	}
+
+	region.set_RST(r11, r21, r22, r31, r32, r33);
+	// tke also varies with wall distance -> fixed?
+	
+
+	//inp_data.close();
+
+	size_t iters{ 2000 };
 
 	std::ofstream file;
+	
+	file.open("RST.txt");
+	for (size_t i{ 0 }; i < n_y; i++) {
+		file << r11(i, 0) << ", " << r21(i, 0) << ", " << r22(i, 0) << ", " << r31(i, 0) << ", " << r32(i, 0) << ", " << r33(i, 0) << std::endl;
+	}
+	file.close();
 
+	/*
+	for (size_t j{ 0 }; j < region.a11.shape[0]; j++) {
+		for (size_t k{ 0 }; k < region.a11.shape[1]; k++) {
+			std::cout << region.a11(j, k) << ", ";
+			std::cout << region.a21(j, k) << ", ";
+			std::cout << region.a22(j, k) << ", ";
+			std::cout << region.a31(j, k) << ", ";
+			std::cout << region.a32(j, k) << ", ";
+			std::cout << region.a33(j, k) << std::endl;
+		}
+	}*/
+	
+	
 	file.open("flow_statistics.txt");
 	file << "u0: " << region.u0 << std::endl;
 	file << "turbulence intensity: " << TI1 << std::endl;
 	file.close();
+
 
 	for (size_t i{ 0 }; i < iters; i++) {
 		region.increment_eddies();
@@ -181,16 +255,6 @@ int main(){
 	}
 
 
-	/*
-	for (size_t i{ 0 }; i < region.a11.size; i++) {
-		std::cout << region.a11(i) << ", ";
-		std::cout << region.a21(i) << ", ";
-		std::cout << region.a22(i) << ", ";
-		std::cout << region.a31(i) << ", ";
-		std::cout << region.a32(i) << ", ";
-		std::cout << region.a33(i) << std::endl;
-	}
-	*/
 	
 	/*
 	for (size_t i{ 0 }; i < region.eddies.size; i++) {

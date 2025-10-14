@@ -324,6 +324,12 @@ public:
         }
     }
 
+    void mul(const T& mult) {
+        for (size_t a{ 0 }; a < size; a++) {
+            array1[a] *= mult;
+        }
+    }
+
     /*
 
     void LinRange(const T& start, const T& end) {

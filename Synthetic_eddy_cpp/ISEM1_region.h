@@ -92,9 +92,9 @@ public:
 			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 0), _eddy.position(1));
 			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 1), _eddy.position(2));
 
-			u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a11(i) * _eddy.epsilon(0) * _eddy.shape);
-			v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a21(i) * _eddy.epsilon(0) + a22(i) * _eddy.epsilon(1)) * _eddy.shape;
-			w_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a31(i) * _eddy.epsilon(0) + a32(i) * _eddy.epsilon(1) + a33(i) * _eddy.epsilon(2)) * _eddy.shape;
+			u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a11(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(0) * _eddy.shape);
+			v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a21(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(0) + a22(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(1)) * _eddy.shape;
+			w_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a31(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(0) + a32(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(1) + a33(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(2)) * _eddy.shape;
 
 			//u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon(0) * _eddy.shape;
 			//v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon(1) * _eddy.shape;
