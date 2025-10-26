@@ -4,8 +4,10 @@
 #include "Eddy.h"
 #include "region.h"
 #include "DFSEM_eddy.h"
+#include "interpolate.h"
 #include <cstdlib>
 #include <random>
+
 
 
 class DFSEM_region : public region {
@@ -45,12 +47,20 @@ public:
 	Array<double> v_prime_local;
 	Array<double> w_prime_local;
 
+	interpolator<double> uu_interp;
+	interpolator<double> uv_interp;
+	interpolator<double> vv_interp;
+	interpolator<double> ww_interp;
+
 	// constructor here
 	
 	DFSEM_region(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet,
-		const Array<double>& _z_inlet, const double& _min_radius, const double& _rep_radius, const double& _max_radius, const double& _delta)
+		const Array<double>& _z_inlet, const double& _min_radius, const double& _rep_radius, const double& _max_radius, const double& _delta,
+		const Array<interpolator<double>>& interps)
 		: region(_u0, _dt, _x_inlet, _y_inlet, _z_inlet, _rep_radius, _delta)
 	{
+		set_RST_interps(interps(0), interps(1), interps(2), interps(3));
+
 		x_max = _x_inlet + _max_radius;
 		x_min = _x_inlet - _max_radius;
 		x_size = x_max - x_min;
@@ -148,6 +158,14 @@ public:
 		}
 	}
 
+	void set_RST_interps(const interpolator<double>& uu, const interpolator<double>& uv,
+		const interpolator<double>& vv, const interpolator<double>& ww) {
+		uu_interp = uu;
+		uv_interp = uv;
+		vv_interp = vv;
+		ww_interp = ww;
+	}
+
 private:
 	double RST_temp[6]; // returns uu, uv, vv, uw, vw, ww for arbitrary position
 	size_t RST_idx[3];
@@ -164,6 +182,7 @@ private:
 	double real_root_check;
 	double c_val1, c_val2;
 	double theta;
+
 	//double alpha_max[3];
 
 	void radius_fn(const double& y, const double& z) {
@@ -193,12 +212,24 @@ private:
 		// RST_temp[1] =
 		
 		// temporary HIT RST for 1% turbulence intensity
+		
 		RST_temp[0] = 0.01 * u0 * 0.01 * u0;
 		RST_temp[1] = 0;
 		RST_temp[2] = 0.01 * u0 * 0.01 * u0;
 		RST_temp[3] = 0;
 		RST_temp[4] = 0;
 		RST_temp[5] = 0.01 * u0 * 0.01 * u0;
+		
+
+		// RST from NASA TBL data
+		/*
+		RST_temp[0] = uu_interp(y);
+		RST_temp[1] = uv_interp(y);
+		RST_temp[2] = vv_interp(y);
+		RST_temp[3] = 0;
+		RST_temp[4] = 0;
+		RST_temp[5] = ww_interp(y);
+		*/
 		return &RST_temp[0];
 	}
 
@@ -214,7 +245,8 @@ private:
 		//c_sqrt_val1 = (2 * b * b * b - 9 * a * b * c + 27 * a * a * d);
 		real_root_check = -27 * a * a * d * d + 18 * a * b * c * d - 4 * a * c * c * c - 4 * b * b * b * d + b * b * c * c;
 		if (real_root_check < 0) {
-			std::cout << "WARNING: c_sqrt_val2 less than 0. Cannot obtain real eigvals. proceed?" << std::endl;
+			std::cout << "WARNING: c_sqrt_val2 less than 0. Cannot obtain real eigvals. proceed?";
+			std::cout << " (a: " << a << ", b: " << b << ", c: " << c << ", d: " << d << ", root_checker: " << real_root_check << ")" << std::endl;
 			std::cin.get();
 		}
 		A = 2 * b * b * b - 9 * a * b * c + 27 * a * a * d;
@@ -226,10 +258,12 @@ private:
 		RST_eigval_temp[0] = D - 2 / (3 * a) * C3 * cos(theta / 3);
 		RST_eigval_temp[1] = D + 2 / (3 * a) * C3 * cos(theta / 3 + M_PI / 3);
 		RST_eigval_temp[2] = D + 2 / (3 * a) * C3 * cos(theta / 3 - M_PI / 3);
+		
 		/*
 		for (size_t o{ 0 }; o < 3; o++) {
 			std::cout << RST_eigval_temp[o] << ", ";
-		}*/
+		}
+		std::cout << std::endl;*/
 	}
 
 	void RST_calc_eigvect(const double RST[6], const double eigval[3]) {
@@ -297,7 +331,7 @@ private:
 		std::uniform_real_distribution<double> x_rand = std::uniform_real_distribution<double>(x_min, x_max);
 			
 		for (size_t i{ 0 }; i < eddies.size; i++) {
-			eddies(i) = DFSEM_eddy(100); // 0
+			eddies(i) = DFSEM_eddy(200); // 0
 			x_temp = x_rand(mt);
 			y_temp = y_rand(mt);
 			z_temp = z_rand(mt);
@@ -361,7 +395,7 @@ private:
 
 	void calc_C2() {
 		// C2 scaling factor is currently INCORRECT - needs fix
-		C2 = 2.0 / sqrt(3.6);
+		C2 = 2.0;// / sqrt(3.6);
 	}
 
 

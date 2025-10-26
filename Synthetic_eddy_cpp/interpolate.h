@@ -13,6 +13,9 @@ struct interpolator {
 	Array<T> x;
 	Array<T> y;
 
+	interpolator(){
+
+	}
 	interpolator(Array<T> _x, Array<T> _y) {
 		x = _x;
 		y = _y;

@@ -42,7 +42,7 @@ void operator delete(void* _ptr) {
 	_tracker.deleted_allocs++;
 	//_tracker.current_allocs -= ;
 }*/
-
+/*
 struct timer {
 	std::chrono::high_resolution_clock::time_point start_time;
 	std::chrono::high_resolution_clock::time_point end_time;
@@ -56,7 +56,7 @@ struct timer {
 		dt = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
 		std::cout << dt.count() << " seconds" << std::endl;
 	}
-};
+};*/
 
 
 
@@ -124,13 +124,7 @@ int main(){
 	double u0 = 823.6; // 100;
 	double dt = 0.000002;
 
-	ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta);
-	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, max_rad1, delta);
-	//DFSEM_region region = DFSEM_region(u0, dt, x_pos, y_plane, z_plane, min_rad1, rep_rad1, max_rad1, delta);
 
-	double TI1 = 0.10;
-
-	region.set_HIT_RST(TI1);
 	//std::cout << region.C1 << std::endl; // DFSEM only
 
 
@@ -145,8 +139,6 @@ int main(){
 	
 	//test1 = dist3(urng);
 	//_tracker.print_allocs();
-
-	std::cout << region.eddies.size << std::endl;
 
 	//std::cout << region.a11(0) << std::endl;
 
@@ -193,13 +185,33 @@ int main(){
 	interpolator<double> ww_interp(y_interp_arr, ww_interp_arr);
 	interpolator<double> uv_interp(y_interp_arr, uv_interp_arr);
 
+	Array<interpolator<double>> interps_arr;
+	interps_arr.resize({ 4 });
+	interps_arr(0) = uu_interp;
+	interps_arr(1) = uv_interp;
+	interps_arr(2) = vv_interp;
+	interps_arr(3) = ww_interp;
+
+	//ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta);
+	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, max_rad1, delta);
+	DFSEM_region region = DFSEM_region(u0, dt, x_pos, y_plane, z_plane, min_rad1, rep_rad1, max_rad1, delta,
+		interps_arr);
+
+	std::cout << region.eddies.size << std::endl;
+
+	double TI1 = 0.10;
+
+	region.set_HIT_RST(TI1);
+
+	//region.set_RST_interps(uu_interp, uv_interp, vv_interp, ww_interp);
+
 	Array<double> r11({ n_y, n_z });
 	Array<double> r21({ n_y, n_z });
 	Array<double> r22({ n_y, n_z });
 	Array<double> r31({ n_y, n_z });
 	Array<double> r32({ n_y, n_z });
 	Array<double> r33({ n_y, n_z });
-
+	
 	for (size_t j{ 0 }; j < n_y; j++) {
 		for (size_t k{ 0 }; k < n_z; k++) {
 			r11(j, k) = uu_interp(y_pos(j));
@@ -213,7 +225,7 @@ int main(){
 		//std::cout << y_pos(j) << ", " << uu_interp(y_pos(j)) << std::endl;
 	}
 
-	region.set_RST(r11, r21, r22, r31, r32, r33);
+	//region.set_RST(r11, r21, r22, r31, r32, r33);
 	// tke also varies with wall distance -> fixed?
 	
 
@@ -250,7 +262,7 @@ int main(){
 
 	for (size_t i{ 0 }; i < iters; i++) {
 		region.increment_eddies();
-		region.print_flucts(i, "ISEM_test");
+		region.print_flucts(i, "DFSEM_test");
 		std::cout << i << std::endl;
 	}
 

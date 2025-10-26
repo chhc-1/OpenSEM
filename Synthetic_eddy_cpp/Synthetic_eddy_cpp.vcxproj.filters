@@ -21,43 +21,43 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Array.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Eddy.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="oSEM_region.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISEM1_region.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DFSEM_region.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="region.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="oSEM_eddy.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISEM1_eddy.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DFSEM_eddy.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="XSEM_eddy.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="DFSEM_region.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="XSEM_region.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="Eddy.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="interpolate.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISEM1_eddy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISEM1_region.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="oSEM_eddy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="oSEM_region.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="region.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="target_stats.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XSEM_eddy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XSEM_region.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
