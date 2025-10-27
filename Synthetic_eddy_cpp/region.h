@@ -286,7 +286,7 @@ protected:
 		x_min = _x_inlet - _radius;
 		x_size = std::abs(x_max - x_min);
 		y_max = y_inlet.max() + _radius;
-		//y_min = y_inlet.min() - _radius;
+		//y_min = y_inlet.min();
 		y_min = y_inlet.min(); // for now assume that minimum y is a wall -> no eddies should appear below this y value
 		z_max = z_inlet.max() + _radius;
 		z_min = z_inlet.min() - _radius;

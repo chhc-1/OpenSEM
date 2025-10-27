@@ -28,6 +28,11 @@ public:
 		L = 0.2; // temporary value
 		base_radius = std::max(std::min(L, 0.41 * _delta), d_max);
 
+		y_min -= base_radius;
+		vol = std::abs((x_max - x_min) * (y_max - y_min) * (z_max - z_min));
+		vol_sqrt = sqrt(vol);
+		y_rand = std::uniform_real_distribution<double>(y_min, y_max);
+
 		size_t N = trunc(vol / pow(_radius, 3)); // use representative radius to determine number of eddies
 		eddies.resize({ N });
 
@@ -107,7 +112,7 @@ private:
 		std::uniform_real_distribution<double> x_dist = std::uniform_real_distribution<double>(x_min, x_max);
 
 		for (size_t i{ 0 }; i < eddies.size; i++) {
-			eddies(i) = oSEM_eddy(max_nodes);
+			eddies(i) = oSEM_eddy(1000);
 
 			x_temp = x_dist(mt);
 			y_temp = y_rand(mt);

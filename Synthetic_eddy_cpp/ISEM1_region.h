@@ -4,6 +4,7 @@
 #include "Array.h"
 #include "Eddy.h"
 #include "region.h"
+#include "interpolate.h"
 #include "ISEM1_eddy.h"
 
 #include <climits>
@@ -21,8 +22,9 @@
 class ISEM1_region : public region {
 public:
 	Array<ISEM1_eddy> eddies;
+	interpolator<double> u_interp;
 
-	ISEM1_region(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet, const Array<double>& _z_inlet, const double& rep_radius, const double& max_radius, const double& _delta) 
+	ISEM1_region(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet, const Array<double>& _z_inlet, const double& rep_radius, const double& max_radius, const double& _delta, const interpolator<double> _u_interp)
 		: region(_u0, _dt, _x_inlet, _y_inlet, _z_inlet, max_radius, _delta) // use max radius as "base_radius" since base_radius used to determine SE region size
 	{
 		double max_rad_temp = std::max(max_radius, d_max);
@@ -40,6 +42,8 @@ public:
 		vf_scaling_factor = 1 / pow(eddies.size, 0.5);
 
 		//eps_temp.resize({ 3 }); // temporary array for epsilon values
+		
+		u_interp = _u_interp;
 
 		instantiate_eddies();
 	}
@@ -120,7 +124,7 @@ private:
 		std::uniform_real_distribution<double> x_dist = std::uniform_real_distribution<double>(x_min, x_max);
 
 		for (size_t i{ 0 }; i < eddies.size; i++) {
-			eddies(i) = ISEM1_eddy(max_nodes);
+			eddies(i) = ISEM1_eddy(1000);
 
 			x_temp = x_dist(mt);
 			y_temp = y_rand(mt);
@@ -136,13 +140,15 @@ private:
 		}
 	}
 
-	const double& velocity_fn(const double& y, const double& z) {
+	const double velocity_fn(const double& y, const double& z) {
+		/*
 		if (y / delta < 1) {
 			return pow(y / delta, 1 / 7) * u0;
 		}
 		else {
 			return u0;
-		}
+		}*/
+		return u_interp(y);
 	}
 
 public:

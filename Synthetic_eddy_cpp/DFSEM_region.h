@@ -103,11 +103,10 @@ public:
 			u_prime_local(i) *= vf_scaling_factor;
 			v_prime_local(i) *= vf_scaling_factor;
 			w_prime_local(i) *= vf_scaling_factor;
-
 			//std::cout << u_prime_local(i) << ", ";
 		}
 		
-		loc_to_gbl();
+		//loc_to_gbl();
 	}
 
 	void increment_eddy(DFSEM_eddy& _eddy) {

@@ -134,6 +134,8 @@
     <ClInclude Include="DFSEM_eddy.h" />
     <ClInclude Include="interpolate.h" />
     <ClInclude Include="ISEM1_eddy.h" />
+    <ClInclude Include="MRSEM_eddy.h" />
+    <ClInclude Include="MRSEM_region.h" />
     <ClInclude Include="oSEM_eddy.h" />
     <ClInclude Include="region.h" />
     <ClInclude Include="DFSEM_region.h" />
