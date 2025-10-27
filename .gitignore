@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Synthetic_eddy_cpp/RST.txt
+/Synthetic_eddy_cpp/flow_statistics.txt
