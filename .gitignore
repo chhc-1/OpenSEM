@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 /Synthetic_eddy_cpp/RST.txt
 /Synthetic_eddy_cpp/flow_statistics.txt
+/Synthetic_eddy_cpp/uprime
+/Synthetic_eddy_cpp/vprime
+/Synthetic_eddy_cpp/wprime
