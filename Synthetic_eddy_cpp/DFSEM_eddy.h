@@ -26,6 +26,12 @@ public:
 	//double eigvect2[3];
 	//double eigvect3[3];
 
+	DFSEM_eddy()
+		:eddy()
+	{
+
+	}
+
 	DFSEM_eddy(const size_t& max_nodes)
 		: eddy(max_nodes)
 	{

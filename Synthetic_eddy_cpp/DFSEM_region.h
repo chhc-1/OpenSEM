@@ -65,6 +65,10 @@ public:
 		x_min = _x_inlet - _max_radius;
 		x_size = x_max - x_min;
 
+		y_min -= _rep_radius;
+
+		y_rand = std::uniform_real_distribution<double>(y_min, y_max);
+
 		vol = std::abs((x_max - x_min) * (y_max - y_min) * (z_max - z_min));
 		vol_sqrt = pow(vol, 0.5);
 
@@ -106,7 +110,7 @@ public:
 			//std::cout << u_prime_local(i) << ", ";
 		}
 		
-		//loc_to_gbl();
+		loc_to_gbl();
 	}
 
 	void increment_eddy(DFSEM_eddy& _eddy) {
@@ -126,10 +130,22 @@ public:
 		}
 		double temp_x = x_inlet(0, 0);
 		for (size_t i{ 0 }; i < _eddy.num_nodes; i++) {
+			//_eddy.calc_r(temp_x, _eddy.nodes_pos(i, 0), _eddy.nodes_pos(i, 1));
+			//u_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += 2.5 * _eddy.radius[0] * (1 - _eddy.r_magn2) * (_eddy.rk[1] * _eddy.alpha[2] - _eddy.rk[2] * _eddy.alpha[1]);
+			//v_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += 2.5 * _eddy.radius[1] * (1 - _eddy.r_magn2) * (_eddy.rk[2] * _eddy.alpha[0] - _eddy.rk[0] * _eddy.alpha[2]);
+			//w_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += 2.5 * _eddy.radius[2] * (1 - _eddy.r_magn2) * (_eddy.rk[0] * _eddy.alpha[1] - _eddy.rk[1] * _eddy.alpha[0]);
+		
+			//_eddy.calc_r(temp_x, _eddy.nodes_pos(i, 0), _eddy.nodes_pos(i, 1));
+			//u_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (1 - _eddy.r_magn2) * (_eddy.rk[1] * _eddy.alpha[2] - _eddy.rk[2] * _eddy.alpha[1]);
+			//v_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (1 - _eddy.r_magn2) * (_eddy.rk[2] * _eddy.alpha[0] - _eddy.rk[0] * _eddy.alpha[2]);
+			//w_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (1 - _eddy.r_magn2) * (_eddy.rk[0] * _eddy.alpha[1] - _eddy.rk[1] * _eddy.alpha[0]);
+
 			_eddy.calc_r(temp_x, _eddy.nodes_pos(i, 0), _eddy.nodes_pos(i, 1));
 			u_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.radius[0] * (1 - _eddy.r_magn2) * (_eddy.rk[1] * _eddy.alpha[2] - _eddy.rk[2] * _eddy.alpha[1]);
 			v_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.radius[1] * (1 - _eddy.r_magn2) * (_eddy.rk[2] * _eddy.alpha[0] - _eddy.rk[0] * _eddy.alpha[2]);
 			w_prime_local(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.radius[2] * (1 - _eddy.r_magn2) * (_eddy.rk[0] * _eddy.alpha[1] - _eddy.rk[1] * _eddy.alpha[0]);
+
+
 		}
 
 		/*
@@ -168,6 +184,7 @@ public:
 private:
 	double RST_temp[6]; // returns uu, uv, vv, uw, vw, ww for arbitrary position
 	size_t RST_idx[3];
+	double eigvect_norm;
 	double RST_eigval_temp[3];
 	double e_matrix[9];
 	double RHS_vect[3];
@@ -176,6 +193,8 @@ private:
 	double alpha_var[3];
 	double alpha_temp[3];
 	double sum_temp;
+	double x1, x2;
+	double phi;
 	double a, b, c, d;
 	double A, Btilde, C, C3, D;
 	double real_root_check;
@@ -194,15 +213,24 @@ private:
 	void alpha_fn(const double _radius[3]) {
 		sum_temp = 0;
 		for (size_t c{ 0 }; c < 3; c++) {
+			//sum_temp += RST_temp[RST_idx[c]] / (_radius[c] * _radius[c]);
+			//sum_temp += RST_temp[RST_idx[c]] / _radius[c];
 			sum_temp += RST_temp[RST_idx[c]] / (_radius[c] * _radius[c]);
 		}
 
 		// need to replace 1e-7 with a different truncation value
 		for (size_t c{ 0 }; c < 3; c++) {
-			alpha_var[c] = std::max(1e-7, (sum_temp - 2 * RST_temp[RST_idx[c]] / (_radius[c] * _radius[c])) / (2 * C2));
+			//alpha_var[c] = std::max(1e-7, (sum_temp - 2 * RST_temp[RST_idx[c]] / (_radius[c] * _radius[c])) / (2 * C2));
 			// line below may not be correct...
-			alpha_temp[c] = alpha_var[c] * double(eps_map[eps_rand(mt)]);
-			
+			//alpha_temp[c] = alpha_var[c] * double(eps_map[eps_rand(mt)]);
+
+			//alpha_var[c] = std::max(1e-7, (sum_temp - 2 * RST_temp[RST_idx[c]] / _radius[c]) / (2 * C2));
+			// line below may not be correct...
+			//alpha_temp[c] = sqrt(alpha_var[c]) / _radius[0] * double(eps_map[eps_rand(mt)]);
+			//alpha_var[c] = std::max(1e-7, (sum_temp - 2 * RST_temp[RST_idx[c]]));// / (2 * C2));
+			//alpha_temp[c] = sqrt(alpha_var[c]) * double(eps_map[eps_rand(mt)]);
+			alpha_var[c] = std::max(1e-7, (sum_temp - 2 * RST_temp[RST_idx[c]] / (_radius[c]*_radius[c])));// / (2 * C2));
+			alpha_temp[c] = sqrt(alpha_var[c]) * double(eps_map[eps_rand(mt)]);
 		}
 	}
 
@@ -235,11 +263,14 @@ private:
 	void RST_calc_eigval(const double RST[6]) {
 		// cubic eval for eigenvalues for Reynold's Stress Tensor
 		// may need to give warning for imaginary eigenvalues for RST?
+
+		// CHECK THE EVALUATION OF EIGENVALUES
+		/*
 		a = 1;
 		b = -(RST[0] + RST[2] + RST[5]);
-		c = RST[0] * RST[2] + RST[0] * RST[5] + RST[2] * RST[5] + RST[1] * RST[1] + RST[3] * RST[3] + RST[4] * RST[4];
-		d = -(RST[0] * RST[2] * RST[5] - RST[0] * RST[4] * RST[4] - RST[1] * RST[1] * RST[5]
-			+ RST[1] * RST[3] * RST[4] + RST[4] * RST[1] + RST[3] - RST[2] * RST[3] * RST[3]);
+		c = RST[0] * RST[2] + RST[0] * RST[5] + RST[2] * RST[5] - RST[1] * RST[1] - RST[3] * RST[3] - RST[4] * RST[4];
+		d = (-RST[0] * RST[2] * RST[5] - 3 * RST[1] * RST[3] * RST[4] + RST[0] * RST[4] * RST[4]
+			+ RST[1] * RST[1] * RST[5] + RST[2] * RST[3] * RST[3]);
 
 		//c_sqrt_val1 = (2 * b * b * b - 9 * a * b * c + 27 * a * a * d);
 		real_root_check = -27 * a * a * d * d + 18 * a * b * c * d - 4 * a * c * c * c - 4 * b * b * b * d + b * b * c * c;
@@ -257,10 +288,31 @@ private:
 		RST_eigval_temp[0] = D - 2 / (3 * a) * C3 * cos(theta / 3);
 		RST_eigval_temp[1] = D + 2 / (3 * a) * C3 * cos(theta / 3 + M_PI / 3);
 		RST_eigval_temp[2] = D + 2 / (3 * a) * C3 * cos(theta / 3 - M_PI / 3);
-		
+		*/
+
+		D = RST[0] + RST[2] + RST[5];
+		x1 = RST[0] * RST[0] + RST[2] * RST[2] + RST[5] * RST[5] - RST[0] * RST[2] - RST[0] * RST[5] - RST[2] * RST[5]
+			+ 3 * (RST[1] * RST[1] + RST[3] * RST[3] + RST[4] * RST[4]);
+		x2 = -(2 * RST[0] - RST[2] - RST[5]) * (2 * RST[2] - RST[0] - RST[5]) * (2 * RST[5] - RST[0] - RST[2])
+			+ 9 * ((2 * RST[5] - RST[0] - RST[2]) * RST[1] * RST[1] + (2 * RST[2] - RST[0] - RST[5]) * RST[3] * RST[3]
+				+ (2 * RST[0] * RST[0] - RST[2] - RST[5]) * RST[4] * RST[4]) - 54 * RST[1] * RST[3] * RST[4];
+
+		if (x2 > 0) {
+			phi = atan(sqrt(4 * x1 * x1 * x1 - x2 * x2) / x2);
+		}
+		else if (x2 == 0) {
+			phi = M_PI / 2;
+		}
+		else {
+			phi = atan(sqrt(4*x1*x1*x1 - x2*x2) / x2) + M_PI;
+		}
+
+		RST_eigval_temp[0] = (D - 2 * sqrt(x1) * cos(phi / 3)) / 3;
+		RST_eigval_temp[2] = (D + 2 * sqrt(x1) * cos((phi - M_PI) / 3)) / 3;
+		RST_eigval_temp[5] = (D + 2 * sqrt(x1) * cos((phi + M_PI) / 3)) / 3;
 		/*
 		for (size_t o{ 0 }; o < 3; o++) {
-			std::cout << RST_eigval_temp[o] << ", ";
+			std::cout << RST_eigval_temp[RST_idx[o]] << ", ";
 		}
 		std::cout << std::endl;*/
 	}
@@ -313,6 +365,9 @@ private:
 			std::cout << std::endl;
 		}
 		*/
+
+		// diagonal matrix for eigenvectors
+		/*
 		for (size_t i{ 0 }; i < 3; i++) {
 			for (size_t m{ 0 }; m < 3; m++) {
 				if (i == m) {
@@ -322,8 +377,40 @@ private:
 					eigvect_temp[3 * i + m] = 0;
 				}
 			}
-		}
+		}*/
 
+		/**/
+		// assume only a21, a12 of the off-diagonal components are non-zero
+		if (eigval[1] == 0) {
+			eigvect_temp[0] = 1;
+			eigvect_temp[1] = 0;
+			eigvect_temp[2] = 0;
+			eigvect_temp[3] = 0;
+			eigvect_temp[4] = 1;
+			eigvect_temp[5] = 0;
+			eigvect_temp[6] = 0;
+			eigvect_temp[7] = 0;
+			eigvect_temp[8] = 1;
+		}
+		else{
+			eigvect_temp[6] = 0;
+			eigvect_temp[7] = 0;
+			eigvect_temp[8] = 1;
+
+			eigvect_temp[0] = (eigval[0] - RST[2]) / RST[1];
+			eigvect_temp[1] = 1;
+			eigvect_norm = pow(eigvect_temp[0]*eigvect_temp[0] + eigvect_temp[1]* eigvect_temp[1], 0.5);
+			eigvect_temp[0] /= eigvect_norm;
+			eigvect_temp[1] /= eigvect_norm;
+			eigvect_temp[2] = 0;
+		
+			eigvect_temp[3] = (eigval[1] - RST[2]) / RST[1];
+			eigvect_temp[4] = 1;
+			eigvect_norm = pow(eigvect_temp[3]* eigvect_temp[3] + eigvect_temp[4]* eigvect_temp[4], 0.5);
+			eigvect_temp[3] /= eigvect_norm;
+			eigvect_temp[4] /= eigvect_norm;
+			eigvect_temp[5] = 0;
+		}
 	}
 
 	void instantiate_eddies() {
@@ -389,7 +476,8 @@ private:
 	}
 
 	void calc_C1(const double& min_rad) {
-		C1 = sqrt(10 * vol) * (avg_radius) / (sqrt(eddies.size) * (pow(avg_radius, 3))) * avg_radius;
+		//C1 = sqrt(10 * vol) * (avg_radius) / (sqrt(eddies.size) * (pow(avg_radius, 3))) * avg_radius;
+		C1 = sqrt(eddies.size * 3 / (4 * M_PI)) * 2.5 * 16 / M_PI / (2 * sqrt(2));
 	}
 
 	void calc_C2() {

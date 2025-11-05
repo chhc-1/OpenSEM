@@ -136,6 +136,7 @@
     <ClInclude Include="ISEM1_eddy.h" />
     <ClInclude Include="MRSEM_eddy.h" />
     <ClInclude Include="MRSEM_region.h" />
+    <ClInclude Include="MRSEM_subregion.h" />
     <ClInclude Include="oSEM_eddy.h" />
     <ClInclude Include="region.h" />
     <ClInclude Include="DFSEM_region.h" />
@@ -143,6 +144,7 @@
     <ClInclude Include="ISEM1_region.h" />
     <ClInclude Include="oSEM_region.h" />
     <ClInclude Include="target_stats.h" />
+    <ClInclude Include="TBL_MRSEM.h" />
     <ClInclude Include="XSEM_eddy.h" />
     <ClInclude Include="XSEM_region.h" />
   </ItemGroup>

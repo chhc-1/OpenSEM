@@ -19,6 +19,12 @@ struct ISEM1_eddy : public eddy {
 public:
 	double radius;
 
+	ISEM1_eddy()
+		: eddy()
+	{
+
+	}
+
 	ISEM1_eddy(const size_t& max_nodes)
 		: eddy(max_nodes)
 	{

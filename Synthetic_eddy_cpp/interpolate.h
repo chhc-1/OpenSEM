@@ -39,10 +39,14 @@ struct interpolator {
 			}
 			if (err < 0) {
 				//std::cout << min_idx << std::endl;
+				if (i == 1) {
+					return y(0);
+				}
 				break;
 			}
+
 		}
-		return (y(min_idx+1) - y(min_idx)) / (x(min_idx+1) - x(min_idx)) * (value-x(min_idx)) + y(min_idx);
+		return (y(min_idx + 1) - y(min_idx)) / (x(min_idx + 1) - x(min_idx)) * (value - x(min_idx)) + y(min_idx);
 	}
 
 	const T operator()(const T& value) {

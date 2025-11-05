@@ -61,6 +61,11 @@ public:
 
 	Array<int> eps_temp;
 
+	// NEVER USE DEFAULT CONSTRUCTOR UNLESS ON MRSEM
+	region() {
+
+	}
+
 	region(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet, const Array<double>& _z_inlet, const double& _radius, const double& _delta) {
 		instantiate_pos(_u0, _dt, _x_inlet, _y_inlet, _z_inlet, _radius, _delta);
 

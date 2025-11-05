@@ -82,7 +82,7 @@ public:
     */
     void resize(const size_t _shape[], const size_t& _ndims) {
         //std::cout << sizeof(*_shape) / sizeof(size_t) << std::endl;
-        delete shape;
+        delete[] shape;
         //shape = new size_t[sizeof(*_shape) / sizeof(size_t)];
         shape = new size_t[_ndims];
         ndims = _ndims;
@@ -92,13 +92,13 @@ public:
             shape[i] = _shape[i];
             size *= shape[i];
         }
-        delete(array1);
-        array1 = (T*)malloc(size * sizeof(T));
+        delete[](array1);
+        array1 = new T[size];//(T*)malloc(size * sizeof(T));
     }
 
     void resize(const std::initializer_list<size_t> list) {
 
-        delete shape;
+        delete[] shape;
         shape = new size_t[list.size()];
         ndims = list.size();
         size = 1;
@@ -106,8 +106,8 @@ public:
             shape[i] = *(list.begin() + i);
             size *= shape[i];
         }
-        delete(array1);
-        array1 = (T*)malloc(size * sizeof(T));
+        delete[](array1);
+        array1 = new T[size];//(T*)malloc(size * sizeof(T));
     }
 
     void set(const T& inp_value) {

@@ -19,6 +19,12 @@ struct oSEM_eddy : public eddy {
 public:
 	double radius;
 
+	oSEM_eddy()
+		: eddy()
+	{
+
+	}
+
 	oSEM_eddy(const size_t& max_nodes)
 		: eddy(max_nodes)
 	{

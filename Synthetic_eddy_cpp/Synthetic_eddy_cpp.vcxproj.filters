@@ -65,5 +65,11 @@
     <ClInclude Include="MRSEM_region.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TBL_MRSEM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MRSEM_subregion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

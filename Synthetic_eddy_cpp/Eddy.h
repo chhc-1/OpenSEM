@@ -37,6 +37,14 @@ public:
 
     double theta_magn;
 
+    eddy() {
+        position = Array<double>({ 3 });
+        epsilon = Array<int>({ 3 });
+        nodes.resize({ 1, 2 });
+        nodes_pos.resize({ 1, 2 });
+        num_nodes = 0;
+    }
+
     eddy(const size_t& max_nodes) {
         position = Array<double>({ 3 });
         epsilon = Array<int>({ 3 });

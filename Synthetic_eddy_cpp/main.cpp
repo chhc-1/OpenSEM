@@ -6,6 +6,10 @@
 #include "ISEM1_region.h"
 #include "DFSEM_eddy.h"
 #include "DFSEM_region.h"
+#include "MRSEM_eddy.h"
+#include "MRSEM_subregion.h"
+#include "MRSEM_region.h"
+#include "TBL_MRSEM.h"
 #include "interpolate.h"
 #include "target_stats.h"
 
@@ -121,9 +125,11 @@ int main(){
 	//double max_rad1 = 0.286 * delta;
 	double max_rad1 = 0.41 * delta;
 
-	//double u0 = 823.6; // 100;
-	double u0 = 150;
+	double u0 = 823.6; // 100;
+	double utau = 40.6; // utau = 40.6m/s
+	//double u0 = 150;
 	double dt = 0.000002;
+	double nu = 0.0006129165;
 
 
 	//std::cout << region.C1 << std::endl; // DFSEM only
@@ -196,7 +202,7 @@ int main(){
 	interps_arr(2) = vv_interp;
 	interps_arr(3) = ww_interp;
 
-	ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta, u_interp);
+	//ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta, u_interp);
 
 	//y_min -= max_rad1;
 	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, max_rad1, delta);
@@ -204,7 +210,10 @@ int main(){
 	//DFSEM_region region = DFSEM_region(u0, dt, x_pos, y_plane, z_plane, min_rad1, rep_rad1, max_rad1, delta,
 	//	interps_arr);
 
-	std::cout << region.eddies.size << std::endl;
+	dt = 5e-7;
+	MRSEM_region region = TBL_MRSEM(n_y, n_z, y_max, z_max, u0, dt, delta, utau, nu);
+
+	//std::cout << region.eddies.size << std::endl;
 
 	double TI1 = 0.01;
 
@@ -232,14 +241,14 @@ int main(){
 		//std::cout << y_pos(j) << ", " << uu_interp(y_pos(j)) << std::endl;
 	}
 
-	region.set_RST(r11, r21, r22, r31, r32, r33);
-	dt = 2e-7;
+	//region.set_RST(r11, r21, r22, r31, r32, r33);
+	//region.dt = 2e-8;
 	// tke also varies with wall distance -> fixed?
 	
 
 	//inp_data.close();
 
-	size_t iters{ 2000 };
+	size_t iters{ 300 };
 
 	std::ofstream file;
 	
@@ -248,6 +257,10 @@ int main(){
 		file << r11(i, 0) << ", " << r21(i, 0) << ", " << r22(i, 0) << ", " << r31(i, 0) << ", " << r32(i, 0) << ", " << r33(i, 0) << std::endl;
 	}
 	file.close();
+	/*
+	for (size_t idx{ 0 }; idx < n_y; idx++) {
+		std::cout << region.a11(idx, 0) << ", " << region.a21(idx, 0) << ", " << region.a22(idx, 0) << ", " << region.a33(idx, 0) << ", " << std::endl;
+	}*/
 
 	/*
 	for (size_t j{ 0 }; j < region.a11.shape[0]; j++) {
@@ -270,7 +283,7 @@ int main(){
 
 	for (size_t i{ 0 }; i < iters; i++) {
 		region.increment_eddies();
-		region.print_flucts(i, "ISEM1_test");
+		region.print_flucts(i, "MRSEM_test");
 		std::cout << i << std::endl;
 	}
 
