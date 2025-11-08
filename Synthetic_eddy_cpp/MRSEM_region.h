@@ -69,6 +69,10 @@ public:
 	}
 
 	void increment_eddies() {
+		uprime.set(0);
+		vprime.set(0);
+		wprime.set(0);
+
 		for (size_t i{ 0 }; i < regions.size; i++) {
 			regions(i).increment_eddies(uprime, vprime, wprime, y_inlet, z_inlet);
 			//std::cout << uprime(50, 50) << std::endl;
@@ -94,7 +98,7 @@ public:
 		file.open(current_dir + "/uprime/" + filename + "_uprime_" + std::to_string(step) + ".txt");
 		for (size_t j{ 0 }; j < y_inlet.shape[0]; j++) {
 			for (size_t k{ 0 }; k < y_inlet.shape[1] - 1; k++) {
-				file << uprime(j, k) << ", ";
+				file << uprime(j, k) << ",";
 			}
 			file << uprime(j, y_inlet.shape[1] - 1) << std::endl;
 		}
@@ -103,7 +107,7 @@ public:
 		file.open(current_dir + "/vprime/" + filename + "_vprime_" + std::to_string(step) + ".txt");
 		for (size_t j{ 0 }; j < y_inlet.shape[0]; j++) {
 			for (size_t k{ 0 }; k < y_inlet.shape[1] - 1; k++) {
-				file << vprime(j, k) << ", ";
+				file << vprime(j, k) << ",";
 			}
 			file << vprime(j, y_inlet.shape[1] - 1) << std::endl;
 		}
@@ -112,7 +116,7 @@ public:
 		file.open(current_dir + "/wprime/" + filename + "_wprime_" + std::to_string(step) + ".txt");
 		for (size_t j{ 0 }; j < y_inlet.shape[0]; j++) {
 			for (size_t k{ 0 }; k < y_inlet.shape[1] - 1; k++) {
-				file << wprime(j, k) << ", ";
+				file << wprime(j, k) << ",";
 			}
 			file << wprime(j, y_inlet.shape[1] - 1) << std::endl;
 		}

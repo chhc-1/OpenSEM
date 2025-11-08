@@ -15,7 +15,7 @@ struct MRSEM_eddy : public eddy {
 	// position(0) is now time position when eddy is created
 
 	MRSEM_eddy()
-		:eddy(300)
+		:eddy(1000)
 	{
 
 	}
@@ -115,21 +115,25 @@ struct shape_fn {
 	}
 
 	virtual double eval(const double& xtilde) {
+		/*
 		if (std::abs(xtilde) < 1) {
 			return f(xtilde);
 		}
 		else {
 			return 0;
-		}
+		}*/
+		return f(xtilde);
 	}
 	virtual double eval(const double& x_in, const double& x_self, const double& radius) {
 		double x_norm = (x_in - x_self) / radius;
+		/*
 		if (std::abs(x_norm) < 1) {
 			return f(x_norm);
 		}
 		else {
 			return 0;
-		}
+		}*/
+		return f(x_norm);
 	}
 
 	virtual double operator()(const double& xtilde) {

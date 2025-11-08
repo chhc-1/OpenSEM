@@ -32,7 +32,8 @@ public:
 	}
 
 	MRSEM_subregion(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet, const Array<double>& _z_inlet
-		, const double& _radius, const double& _delta, const double& _lx, const double& _ly, const double& _lz)
+		, const double& _radius, const double& _delta, const double& _lx, const double& _ly, const double& _lz, const double& _y_min,
+		const double& _y_max)
 		: region(_u0, _dt, _x_inlet, _y_inlet, _z_inlet, _radius, _delta)
 	{
 		// can attempt to use array of functors to contain the various shape functions used
@@ -47,6 +48,8 @@ public:
 		x_max = _x_inlet + max_rad_temp;
 		x_min = _x_inlet - max_rad_temp;
 		x_size = std::abs(x_max - x_min);
+		y_max = _y_max;
+		y_min = _y_min;
 
 		//vol = std::abs((x_max - x_min) * (y_max - y_min) * (z_max - z_min));
 		//vol_sqrt = pow(vol, 0.5);
@@ -57,6 +60,9 @@ public:
 		size_t N = trunc((z_max - z_min) * (y_max - y_min) / (4 * ly * lz));
 		eddies.resize({ N });
 		vf_scaling_factor = 1 / sqrt(N);
+		vf_scaling_factor = 1 / pow(N, 0.065);
+		//vf_scaling_factor = 1;
+		//vf_scaling_factor = 1; // vf scaling factor deals with probability in y, z direction?
 
 		t = 0;
 
@@ -97,22 +103,41 @@ public:
 		}
 		
 		for (size_t idx{ 0 }; idx < _eddy.num_nodes; idx++) {
-			_eddy.shape[0] = shape_t[0](t, _eddy.position[0] + _eddy.radius[0], _eddy.radius[0]);
-			_eddy.shape[0] *= shape_t[1](_eddy.nodes_pos(idx, 0), _eddy.position[1], _eddy.radius[1]);
-			_eddy.shape[0] *= shape_t[2](_eddy.nodes_pos(idx, 1), _eddy.position[2], _eddy.radius[2]);
+			t_abs = (t - (_eddy.position[0] + _eddy.radius[0])) / _eddy.radius[0];
+			y_abs = (_eddy.nodes_pos(idx, 0) - _eddy.position[1]) / _eddy.radius[1];
+			z_abs = (_eddy.nodes_pos(idx, 1) - _eddy.position[2]) / _eddy.radius[2];
+			r_abs = pow(t_abs * t_abs + y_abs * y_abs + z_abs * z_abs, 0.5);
 
-			_eddy.shape[1] = shape_y[0](t, _eddy.position[0] + _eddy.radius[0], _eddy.radius[0]);
-			_eddy.shape[1] *= shape_y[1](_eddy.nodes_pos(idx, 0), _eddy.position[1], _eddy.radius[1]);
-			_eddy.shape[1] *= shape_y[2](_eddy.nodes_pos(idx, 1), _eddy.position[2], _eddy.radius[2]);
+			if (r_abs < 1) {
+				_eddy.shape[0] = shape_t[0](t, _eddy.position[0] + _eddy.radius[0], _eddy.radius[0]);
+				_eddy.shape[0] *= shape_t[1](_eddy.nodes_pos(idx, 0), _eddy.position[1], _eddy.radius[1]);
+				_eddy.shape[0] *= shape_t[2](_eddy.nodes_pos(idx, 1), _eddy.position[2], _eddy.radius[2]);
 
-			_eddy.shape[2] = shape_z[0](t, _eddy.position[0] + _eddy.radius[0], _eddy.radius[0]);
-			_eddy.shape[2] *= shape_z[1](_eddy.nodes_pos(idx, 0), _eddy.position[1], _eddy.radius[1]);
-			_eddy.shape[2] *= shape_z[2](_eddy.nodes_pos(idx, 1), _eddy.position[2], _eddy.radius[2]);
+				_eddy.shape[1] = shape_y[0](t, _eddy.position[0] + _eddy.radius[0], _eddy.radius[0]);
+				_eddy.shape[1] *= shape_y[1](_eddy.nodes_pos(idx, 0), _eddy.position[1], _eddy.radius[1]);
+				_eddy.shape[1] *= shape_y[2](_eddy.nodes_pos(idx, 1), _eddy.position[2], _eddy.radius[2]);
+
+				_eddy.shape[2] = shape_z[0](t, _eddy.position[0] + _eddy.radius[0], _eddy.radius[0]);
+				_eddy.shape[2] *= shape_z[1](_eddy.nodes_pos(idx, 0), _eddy.position[1], _eddy.radius[1]);
+				_eddy.shape[2] *= shape_z[2](_eddy.nodes_pos(idx, 1), _eddy.position[2], _eddy.radius[2]);
+			}
+			else {
+				_eddy.shape[0] = 0;
+				_eddy.shape[1] = 0;
+				_eddy.shape[2] = 0;
+			}
+			
 
 			uprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[0]) * _eddy.shape[0];
-			vprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[1]) * _eddy.shape[2];
+			vprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[1]) * _eddy.shape[1];
 			wprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[2]) * _eddy.shape[2];
-
+			
+			//for (size_t idx2{ 0 }; idx2 < 3; idx2++) {
+			//	if (std::abs(_eddy.shape[idx2]) > 1) {
+			//		std::cout << t << ", " << idx2 << ", " << _eddy.shape[idx2] << std::endl;
+			//	}
+			//}
+			//std::cout << _eddy.shape[0] << ", " << _eddy.shape[1] << ", " << _eddy.shape[2] << std::endl;
 		}
 		/*
 		for (size_t idx{ 0 }; idx < _y_inlet.size; idx++) {
@@ -148,6 +173,10 @@ public:
 	}
 
 private:
+	double t_abs;
+	double y_abs;
+	double z_abs;
+	double r_abs;
 	double t_temp;
 	double y_temp;
 	double z_temp;

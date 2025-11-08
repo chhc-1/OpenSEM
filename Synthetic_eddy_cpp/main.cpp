@@ -94,8 +94,8 @@ int main(){
 	double z_min = 0.0;
 	double z_max = 0.05;
 
-	size_t n_y = 100; // 200;
-	size_t n_z = 150;
+	size_t n_y = 100; //50; // 200;
+	size_t n_z = 150; //100; //150;
 
 	Array<double> y_pos;
 	Array<double> z_pos;

@@ -26,7 +26,7 @@ public:
 	double base_radius;
 	size_t max_nodes; // maximum number of nodes an eddy needs to check
 
-
+	std::string current_dir = "C:/Users/hayde/Desktop/University_of_Southampton_files/Year_3_(Course_related)/FEEG3003_Individual_Project/Synthetic_eddy_region_code/Synthetic_eddy_cpp/Synthetic_eddy_cpp";
 
 	Array<double> x_inlet;
 	Array<double> y_inlet;
@@ -217,31 +217,31 @@ public:
 
 		std::ofstream output;
 
-		output.open(file_name + "_uprime_" + std::to_string(ID) + ".txt");
+		output.open(current_dir + "/uprime/" + file_name + "_uprime_" + std::to_string(ID) + ".txt");
 		for (size_t j{ 0 }; j < y_inlet.shape[0]; j++) {
 			//std::cout << j  << "-------------" << std::endl;
 			//output << j << ", ";
 			for (size_t i{ 0 }; i < y_inlet.shape[1] - 1; i++) {
 				//std::cout << j * y_inlet.shape[1] + i << std::endl;
-				output << u_prime(j, i) << ", ";
+				output << u_prime(j, i) << ",";
 			}
 			output << u_prime(j, y_inlet.shape[1] - 1) << std::endl;
 		}
 		output.close();
 
-		output.open(file_name + "_vprime_" + std::to_string(ID) + ".txt");
+		output.open(current_dir + "/uprime/" + file_name + "_vprime_" + std::to_string(ID) + ".txt");
 		for (size_t j{ 0 }; j < y_inlet.shape[0]; j++) {
 			for (size_t i{ 0 }; i < y_inlet.shape[1] - 1; i++) {
-				output << v_prime(j, i) << ", ";
+				output << v_prime(j, i) << ",";
 			}
 			output << v_prime(j, y_inlet.shape[1] - 1) << std::endl;
 		}
 		output.close();
 
-		output.open(file_name + "_wprime_" + std::to_string(ID) + ".txt");
+		output.open(current_dir + "/uprime/" + file_name + "_wprime_" + std::to_string(ID) + ".txt");
 		for (size_t j{ 0 }; j < y_inlet.shape[0]; j++) {
 			for (size_t i{ 0 }; i < y_inlet.shape[1] - 1; i++) {
-				output << w_prime(j, i) << ", ";
+				output << w_prime(j, i) << ",";
 			}
 			output << w_prime(j, y_inlet.shape[1] - 1) << std::endl;
 		}

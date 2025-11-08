@@ -5,19 +5,40 @@
 #include "MRSEM_subregion.h"
 #include "MRSEM_region.h"
 
+#define e 2.7182818284590452353
+
 double gaussian(const double& x) {
-	return 1 / sqrt(2 * M_PI) * exp(-0.5 * x);
+	return 1 / 0.8641898707968644 * exp(-0.5 * x*x); // factor comes from evaluation of gaussian squared from -1 to 1 - see jupyter notebook
 }
 double mgaussian(const double& x) {
-	return -1 / sqrt(2 * M_PI) * exp(-0.5 * x);
-}
-double xgaussian(const double& x) {
-	return  x / sqrt(2 * M_PI) * exp(-0.5 * x);
-}
-double H(const double& x){
-	return 1 - cos(2 * M_PI * x) / (2 * M_PI * x * sqrt(0.214));
+	return -1 / 0.8641898707968644 * exp(-0.5 * x*x);
 }
 
+// x gaus may have issues
+double xgaussian(const double& x) {
+	return 1 / 0.4352842126938356 * std::abs(x) * exp(-0.5 * x*x);
+}
+
+// H function most likely has issues - all regions with H have issues currently
+double H(const double& x){
+	//return 1 / 0.7071067811865476 * (1 - cos(2 * M_PI * std::abs(x)) / sqrt(0.214));// (2 * M_PI * sqrt(0.214));
+	return cos(M_PI / 2 * x) * sqrt(1.6);// *sqrt(2);
+}
+
+double zerofnptr(const double& x) {
+	return 0;
+}
+
+
+// need to scale the functions separately for each region, since eg a larger eddy size in the z direction gives higher probability of non-zero value -> increases value
+// Increase in value is likely reflected by spike in produced RST  
+// May not be necessary since number of eddies is also scaled by this
+// evaluate the scaling factor numerically, also need to consider the effect of different time lengths (lt)
+// also consider taking the product of the scaling functions and producing the scaling factor using that, although this should not be necessary if number eddies
+// balances the eddy size/radius appropriately
+
+// currently output RST is independent of input eddy radius (assuming same ratio of eddy radii), which is as expected
+// values however are of order 10^2 off...
 
 MRSEM_region TBL_MRSEM(const size_t& ny, const size_t& nz, const double& ymax, const double& zmax, const double& _u0, const double& _dt,
 	const double& delta, const double& utau, const double& nu) {
@@ -27,6 +48,7 @@ MRSEM_region TBL_MRSEM(const size_t& ny, const size_t& nz, const double& ymax, c
 	shape_fn mgauss1(mgaussian);
 	shape_fn xgauss1(xgaussian);
 	shape_fn H1(H);
+	shape_fn zerofn(zerofnptr);
 
 	//std::cout << gauss1(0.5) << ", " << gauss1(1, 0.5, 1) << std::endl;
 	
@@ -69,15 +91,18 @@ MRSEM_region TBL_MRSEM(const size_t& ny, const size_t& nz, const double& ymax, c
 	y_temp.set(0);
 	z_temp.set(0);
 
+	std::cout << "length scale: "  << l << std::endl;
+
 	// near wall region
 	{
-		double lx1 = 100 * l;
-		double ly1 = 20 * l;
-		double lz1 = 60 * l;
+		double lx1 = 100 * l; // 60 * l; //
+		double ly1 = 20 * l; // 60 * l; //
+		double lz1 = 60 * l; // 60 * l; //
 		double c1 = 15 * utau;
 
 		//std::cout << _MRSEM.y_inlet.shape[0] << ", " << _MRSEM.z_inlet.shape[1] << std::endl;
-		_MRSEM.regions(0) = MRSEM_subregion(c1, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx1, ly1, lz1);
+		_MRSEM.regions(0) = MRSEM_subregion(c1, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, 
+			lx1, ly1, lz1, 20 * l, 60 * l);
 		//std::cout << _MRSEM.y_inlet.shape[0] << ", " << _MRSEM.z_inlet.shape[1] << std::endl;
 		_MRSEM.regions(0).u0 = c1;
 		_MRSEM.regions(0).dt = _dt;
@@ -87,15 +112,15 @@ MRSEM_region TBL_MRSEM(const size_t& ny, const size_t& nz, const double& ymax, c
 
 		_MRSEM.regions(0).shape_t[0] = gauss1;
 		_MRSEM.regions(0).shape_t[1] = gauss1;
-		_MRSEM.regions(0).shape_t[2] = H1;
+		_MRSEM.regions(0).shape_t[2] = H1;//gauss1;//H1;
 
 		_MRSEM.regions(0).shape_y[0] = gauss1;
 		_MRSEM.regions(0).shape_y[1] = mgauss1;
-		_MRSEM.regions(0).shape_y[2] = H1;
+		_MRSEM.regions(0).shape_y[2] = H1;//gauss1;//H1;
 
 		_MRSEM.regions(0).shape_z[0] = gauss1;
 		_MRSEM.regions(0).shape_z[1] = gauss1;
-		_MRSEM.regions(0).shape_z[2] = H1;
+		_MRSEM.regions(0).shape_z[2] = H1;//gauss1;//H1;
 
 		double temp = _MRSEM.regions(0).shape_t[0](1, 0.5, 1);
 		//std::cout << "shape eval: " << _MRSEM.regions(0).shape_t[0](1, 0.5, 1) << ", " << gauss1(1, 0.5, 1) << std::endl;
@@ -110,24 +135,25 @@ MRSEM_region TBL_MRSEM(const size_t& ny, const size_t& nz, const double& ymax, c
 	// hair pin vortices / log layer
 	// hairpin legs
 	{
-		double lx2 = 120 * l;
-		double ly2 = 60 * l;
-		double lz2 = 60 * l;
+		double lx2 = 120 * l; //60 * l; //
+		double ly2 = 60 * l; //60 * l; //30 * l; //
+		double lz2 = 60 * l; //60 * l; // 30 * l; //
 		double c2 = 15 * utau;
 		//std::cout << _MRSEM.y_inlet.shape[0] << ", " << _MRSEM.z_inlet.shape[1] << std::endl;
-		_MRSEM.regions(1) = MRSEM_subregion(c2, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx2, ly2, lz2);
+		_MRSEM.regions(1) = MRSEM_subregion(c2, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx2, ly2, lz2,
+			60 * l, 0.4 * delta);
 
 		_MRSEM.regions(1).shape_t[0] = gauss1;
 		_MRSEM.regions(1).shape_t[1] = gauss1;
-		_MRSEM.regions(1).shape_t[2] = H1;
+		_MRSEM.regions(1).shape_t[2] = H1;//gauss1;//H1;
 
 		_MRSEM.regions(1).shape_y[0] = gauss1;
 		_MRSEM.regions(1).shape_y[1] = mgauss1;
-		_MRSEM.regions(1).shape_y[2] = H1;
+		_MRSEM.regions(1).shape_y[2] = H1;//gauss1;//H1;
 
 		_MRSEM.regions(1).shape_z[0] = gauss1;
 		_MRSEM.regions(1).shape_z[1] = gauss1;
-		_MRSEM.regions(1).shape_z[2] = H1;
+		_MRSEM.regions(1).shape_z[2] = H1;//gauss1;//H1;
 		
 		// 60 < y+ < 0.4deltaplus
 		_MRSEM.regions(1).y_rand = std::uniform_real_distribution<double>(60 * l, 0.4 * delta);
@@ -137,24 +163,25 @@ MRSEM_region TBL_MRSEM(const size_t& ny, const size_t& nz, const double& ymax, c
 
 	// hairpin heads
 	{
-		double lx3 = 60 * l;
-		double ly3 = 60 * l;
-		double lz3 = 120 * l;
+		double lx3 = 60 * l; //60 * l;
+		double ly3 = 60 * l; //60 * l;
+		double lz3 = 120 * l; //120 * l;//80 * l;//120 * l;
 		double c3 = 15 * utau;
 
-		_MRSEM.regions(2) = MRSEM_subregion(c3, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx3, ly3, lz3);
+		_MRSEM.regions(2) = MRSEM_subregion(c3, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx3, ly3, lz3,
+			0.4 * delta, 0.5 * delta);
 
 		_MRSEM.regions(2).shape_t[0] = mgauss1;
-		_MRSEM.regions(2).shape_t[1] = H1;
+		_MRSEM.regions(2).shape_t[1] = H1;//gauss1;//H1;
 		_MRSEM.regions(2).shape_t[2] = gauss1;
 
-		_MRSEM.regions(2).shape_y[0] = xgauss1;
+		_MRSEM.regions(2).shape_y[0] = xgauss1;//gauss1;//xgauss1;
 		_MRSEM.regions(2).shape_y[1] = gauss1;
 		_MRSEM.regions(2).shape_y[2] = gauss1;
 
 		_MRSEM.regions(2).shape_z[0] = gauss1;
 		_MRSEM.regions(2).shape_z[1] = gauss1;
-		_MRSEM.regions(2).shape_z[2] = xgauss1;
+		_MRSEM.regions(2).shape_z[2] = xgauss1;//gauss1;//xgauss1;
 
 		// 0.4deltaplus < y+ < 0.5deltaplus
 		_MRSEM.regions(2).y_rand = std::uniform_real_distribution<double>(0.4 * delta, 0.5 * delta);
@@ -170,7 +197,8 @@ MRSEM_region TBL_MRSEM(const size_t& ny, const size_t& nz, const double& ymax, c
 		double lz4 = 0.1 * delta;
 		double c4 = 0.8 * _u0;
 
-		_MRSEM.regions(3) = MRSEM_subregion(c4, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx4, ly4, lz4);
+		_MRSEM.regions(3) = MRSEM_subregion(c4, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx4, ly4, lz4,
+			0.5 * delta, 0.8 * delta);
 
 		_MRSEM.regions(3).shape_t[0] = gauss1;
 		_MRSEM.regions(3).shape_t[1] = gauss1;
@@ -195,7 +223,8 @@ MRSEM_region TBL_MRSEM(const size_t& ny, const size_t& nz, const double& ymax, c
 		double lz5 = 0.15 * delta;
 		double c5 = 0.8 * _u0;
 
-		_MRSEM.regions(4) = MRSEM_subregion(c5, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx5, ly5, lz5);
+		_MRSEM.regions(4) = MRSEM_subregion(c5, _dt, xtemp, _MRSEM.y_inlet, _MRSEM.z_inlet, rad_temp, delta, lx5, ly5, lz5,
+			0.8 * delta, y.max());
 
 		_MRSEM.regions(4).shape_t[0] = gauss1;
 		_MRSEM.regions(4).shape_t[1] = gauss1;
