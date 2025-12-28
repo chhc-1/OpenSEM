@@ -4,7 +4,7 @@ WIP library for testing various Synthetic Eddy methods for turbulent inflow. Syn
 
 - Original Synthetic Eddy method (oSEM) (Jarrin et al. 2006) [1]
 
-- Improved Synthetic Eddy method (ISEM) (Xiong et al. 2024) [2]
+- Improved Synthetic Eddy method (ISEM) (Xiong et al. 2022) [2]
 
 - Multi-region Synthetic eddy method (MRSEM) (Pamiès et al. 2009) [3]
 
