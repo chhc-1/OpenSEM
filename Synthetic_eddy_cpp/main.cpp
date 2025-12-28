@@ -92,10 +92,10 @@ int main(){
 	double y_min = 0.0;
 	double y_max = 1.4 * delta;
 	double z_min = 0.0;
-	double z_max = 0.05;
+	double z_max = 0.025;
 
-	size_t n_y = 100; //50; // 200;
-	size_t n_z = 150; //100; //150;
+	size_t n_y = 300;//100;//500;//100; //50; // 200;
+	size_t n_z = 150;//150;//250; //100; //150;
 
 	Array<double> y_pos;
 	Array<double> z_pos;
@@ -202,7 +202,9 @@ int main(){
 	interps_arr(2) = vv_interp;
 	interps_arr(3) = ww_interp;
 
-	//ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta, u_interp);
+	dt = 2e-8;//2e-8;
+
+	ISEM1_region region = ISEM1_region(u0, dt, x_pos, y_plane, z_plane, rep_rad1, max_rad1, delta, u_interp);
 
 	//y_min -= max_rad1;
 	//oSEM_region region = oSEM_region(u0, dt, x_pos, y_plane, z_plane, max_rad1, delta);
@@ -210,8 +212,9 @@ int main(){
 	//DFSEM_region region = DFSEM_region(u0, dt, x_pos, y_plane, z_plane, min_rad1, rep_rad1, max_rad1, delta,
 	//	interps_arr);
 
-	dt = 5e-7;
-	MRSEM_region region = TBL_MRSEM(n_y, n_z, y_max, z_max, u0, dt, delta, utau, nu);
+	//dt = 5e-7;
+	
+	//MRSEM_region region = TBL_MRSEM(n_y, n_z, y_max, z_max, u0, dt, delta, utau, nu);
 
 	//std::cout << region.eddies.size << std::endl;
 
@@ -241,14 +244,20 @@ int main(){
 		//std::cout << y_pos(j) << ", " << uu_interp(y_pos(j)) << std::endl;
 	}
 
-	//region.set_RST(r11, r21, r22, r31, r32, r33);
+	region.set_RST(r11, r21, r22, r31, r32, r33);
+	/*
+	for (size_t i{ 0 }; i < region.a11.size; i++) {
+		std::cout << region.a11(i) << ", " << region.a21(i) << ", " << region.a22(i) << ", " << region.a31(i) << ", "
+			<< region.a32(i) << ", " << region.a33(i) << std::endl;
+ 	}
+	*/
 	//region.dt = 2e-8;
 	// tke also varies with wall distance -> fixed?
 	
 
 	//inp_data.close();
 
-	size_t iters{ 300 };
+	size_t iters{ 2000 };
 
 	std::ofstream file;
 	
@@ -280,10 +289,23 @@ int main(){
 	file << "turbulence intensity: " << TI1 << std::endl;
 	file.close();
 
+	Array<double> eddyprevx;
+	eddyprevx.resize({ region.eddies.size});
+	eddyprevx.set(0);
 
 	for (size_t i{ 0 }; i < iters; i++) {
+		/*
+		for (size_t idx{ 0 }; idx < region.eddies.size; idx++) {
+			std::cout << "initial pos:" << eddyprevx(idx) << ", delta: " << region.eddies(idx).position[0] - eddyprevx(idx) << ", increment: " << region.eddies(idx).increment << std::endl;
+		}
+		std::cout << "------------------------------" << std::endl;
+		*/
 		region.increment_eddies();
-		region.print_flucts(i, "MRSEM_test");
+		/*
+		for (size_t idx{ 0 }; idx < region.eddies.size; idx++) {
+			eddyprevx(idx) = region.eddies(idx).position[0];
+		}*/
+		region.print_flucts(i, "ISEM_test");
 		std::cout << i << std::endl;
 	}
 

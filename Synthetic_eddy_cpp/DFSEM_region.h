@@ -307,8 +307,8 @@ private:
 			phi = atan(sqrt(4*x1*x1*x1 - x2*x2) / x2) + M_PI;
 		}
 
-		RST_eigval_temp[0] = (D - 2 * sqrt(x1) * cos(phi / 3)) / 3;
-		RST_eigval_temp[2] = (D + 2 * sqrt(x1) * cos((phi - M_PI) / 3)) / 3;
+		RST_eigval_temp[0] = (D + 2 * sqrt(x1) * cos((phi - M_PI) / 3)) / 3;
+		RST_eigval_temp[2] = (D - 2 * sqrt(x1) * cos(phi / 3)) / 3;
 		RST_eigval_temp[5] = (D + 2 * sqrt(x1) * cos((phi + M_PI) / 3)) / 3;
 		/*
 		for (size_t o{ 0 }; o < 3; o++) {

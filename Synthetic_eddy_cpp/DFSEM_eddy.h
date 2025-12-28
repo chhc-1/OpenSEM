@@ -41,9 +41,9 @@ public:
 	}
 
 	void reset(const double& new_x, const double& new_y, const double& new_z, const double new_r[3], const double& volume, const double& u, const double& dt, const Array<double>& y_plane, const Array<double>& z_plane, const double _alpha[3]) {
-		position(0) = new_x;
-		position(1) = new_y;
-		position(2) = new_z;
+		position[0] = new_x;
+		position[1] = new_y;
+		position[2] = new_z;
 
 		//radius = new_r;
 		for (size_t m{ 0 }; m < 3; m++) {
@@ -80,9 +80,9 @@ public:
 	}
 
 	void calc_r(const double& x, const double& y, const double& z) {
-		rk[0] = (x - position(0)) / radius[0];
-		rk[1] = (y - position(1)) / radius[1];
-		rk[2] = (z - position(2)) / radius[2];
+		rk[0] = (x - position[0]) / radius[0];
+		rk[1] = (y - position[1]) / radius[1];
+		rk[2] = (z - position[2]) / radius[2];
 
 		theta_magn = sqrt(pow(rk[0], 2) + pow(rk[1], 2) + pow(rk[2], 2));
 

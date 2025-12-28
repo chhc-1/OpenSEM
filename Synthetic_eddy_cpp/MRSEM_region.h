@@ -74,7 +74,7 @@ public:
 		wprime.set(0);
 
 		for (size_t i{ 0 }; i < regions.size; i++) {
-			regions(i).increment_eddies(uprime, vprime, wprime, y_inlet, z_inlet);
+			regions(i).increment_eddies(uprime, vprime, wprime, y_inlet, z_inlet, a11, a21, a22, a31, a32, a33);
 			//std::cout << uprime(50, 50) << std::endl;
 		}
 	}
@@ -87,6 +87,51 @@ public:
 			a31(idx) = 0;
 			a32(idx) = 0;
 			a33(idx) = u0 * TI;
+		}
+	}
+
+	void set_RST(const Array<double>& r11, const Array<double>& r21, const Array<double>&r22, const Array<double>& r31,
+		const Array<double>& r32, const Array<double>& r33) {
+		for (size_t idx{ 0 }; idx < a11.size; idx++) {
+			a11(idx) = sqrt(r11(idx));
+			if (a11(idx) == 0) {
+				if (r21(idx) == 0) {
+					a21(idx) = 0;
+				}
+				else {
+					std::cout << "div 0 error in a21 term. Continue? " << std::cin.get();
+					std::cout << std::endl;
+				}
+			}
+			else {
+				a21(idx) = r21(idx) / a11(idx);
+			}
+			a22(idx) = sqrt(r22(idx) - a21(idx)*a21(idx));
+			if (a11(idx) == 0) {
+				if (r31(idx) == 0) {
+					a31(idx) = 0;
+				}
+				else {
+					std::cout << "div 0 error in a31 term. Continue?" << std::cin.get();
+					std::cout << std::endl;
+				}
+			}
+			else {
+				a31(idx) = r31(idx) / a11(idx);
+			}
+			if (a22(idx) == 0) {
+				if (r32(idx) == 0) {
+					a32(idx) = 0;
+				}
+				else {
+					std::cout << "div 0 error in a32 term. Continue?" << std::cin.get();
+					std::cout << std::endl;
+				}
+			}
+			else {
+				a32(idx) = (r32(idx) -a31(idx) * a21(idx)) / a22(idx);
+			}
+			a33(idx) = sqrt(r33(idx) - a31(idx) * a31(idx) - a32(idx) * a32(idx));
 		}
 	}
 	

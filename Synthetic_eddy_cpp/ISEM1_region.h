@@ -23,10 +23,19 @@ class ISEM1_region : public region {
 public:
 	Array<ISEM1_eddy> eddies;
 	interpolator<double> u_interp;
+	Array<double> T_prime;
+	double Tinf;
+	double Ma;
+	double gamma;
 
 	ISEM1_region(const double& _u0, const double& _dt, const double& _x_inlet, const Array<double>& _y_inlet, const Array<double>& _z_inlet, const double& rep_radius, const double& max_radius, const double& _delta, const interpolator<double> _u_interp)
 		: region(_u0, _dt, _x_inlet, _y_inlet, _z_inlet, max_radius, _delta) // use max radius as "base_radius" since base_radius used to determine SE region size
 	{
+		T_prime.resize({ _y_inlet.shape[0], _y_inlet.shape[1] });
+		Tinf = 300;
+		Ma = 2;
+		gamma = 1.4;
+
 		double max_rad_temp = std::max(max_radius, d_max);
 
 		x_max = _x_inlet + max_rad_temp;
@@ -38,8 +47,10 @@ public:
 
 		size_t N = trunc(vol / pow(rep_radius, 3)); // use representative radius to determine number of eddies
 		eddies.resize({ N });
+		std::cout << eddies.size << std::endl;
 
 		vf_scaling_factor = 1 / pow(eddies.size, 0.5);
+		std::cout << vf_scaling_factor << std::endl;
 
 		//eps_temp.resize({ 3 }); // temporary array for epsilon values
 		
@@ -54,17 +65,26 @@ public:
 		w_prime.set(0);
 
 		for (size_t idx{ 0 }; idx < eddies.size; idx++) {
+			/*
+			if (std::abs(eddies(idx).position[0]) < eddies(idx).radius) {
+				std::cout << eddies(idx).position[0] << ", " << eddies(idx).position[1] << ", " << eddies(idx).position[2] << ", " << eddies(idx).radius << std::endl;
+			}*/
 			increment_eddy(eddies(idx));
 		}
 
 		for (size_t i{ 0 }; i < u_prime.size; i++) { // moved scaling factor for velocity fluctuations outside to reduce number of long operations
 			//std::cout << vf_scaling_factor;
 			//std::cout << u_prime(i) << std::endl;
-
+			
 			u_prime(i) *= vf_scaling_factor;
 			v_prime(i) *= vf_scaling_factor;
 			w_prime(i) *= vf_scaling_factor;
+
+			T_prime(i) = Tinf * (-(gamma-1) * Ma*Ma * u_prime(i) / u0);
+			//std::cout << u_prime(i) << ", " << v_prime(i) << ", " << w_prime(i) << std::endl;
 		}
+
+		
 	}
 
 	void increment_eddy(ISEM1_eddy& _eddy) {
@@ -79,7 +99,7 @@ public:
 			// evaluate new value of epsilon
 			epsilon_direction();
 
-			_eddy.reset(_eddy.position(0) - x_size, y_temp, z_temp, radius_temp, vol_sqrt, u_temp, dt, y_inlet, z_inlet, eps_temp);
+			_eddy.reset(_eddy.position[0] - x_size, y_temp, z_temp, radius_temp, vol_sqrt, u_temp, dt, y_inlet, z_inlet, eps_temp);
 		}
 
 		double temp_x = x_inlet(0, 0); // assume inlet is planar constant x
@@ -92,17 +112,17 @@ public:
 			//_eddy.shape *= _eddy.shape_fn(x_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(0));
 			//_eddy.shape *= _eddy.shape_fn(y_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(1));
 			//_eddy.shape *= _eddy.shape_fn(z_inlet(_eddy.nodes(i, 0), _eddy.nodes(i, 1)), _eddy.position(2));
-			_eddy.shape *= _eddy.shape_fn(temp_x, _eddy.position(0));
-			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 0), _eddy.position(1));
-			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 1), _eddy.position(2));
+			_eddy.shape *= _eddy.shape_fn(temp_x, _eddy.position[0]);
+			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 0), _eddy.position[1]);
+			_eddy.shape *= _eddy.shape_fn(_eddy.nodes_pos(i, 1), _eddy.position[2]);
 
-			//u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a11(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(0) * _eddy.shape);
-			//v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a21(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(0) + a22(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(1)) * _eddy.shape;
-			//w_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a31(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(0) + a32(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(1) + a33(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon(2)) * _eddy.shape;
-
-			u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon(0) * _eddy.shape;
-			v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon(1) * _eddy.shape;
-			w_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon(2) * _eddy.shape;
+			u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a11(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon[0] * _eddy.shape);
+			v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a21(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon[0] + a22(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon[1]) * _eddy.shape;
+			w_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += (a31(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon[0] + a32(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon[1] + a33(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) * _eddy.epsilon[2]) * _eddy.shape;
+			//std::cout << _eddy.shape << ", " << _eddy.epsilon[0] * _eddy.shape << std::endl;
+			//u_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon[0] * _eddy.shape;
+			//v_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon[1] * _eddy.shape;
+			//w_prime(_eddy.nodes(i, 0), _eddy.nodes(i, 1)) += _eddy.epsilon[2] * _eddy.shape;
 		}
 	}
 
@@ -116,6 +136,19 @@ public:
 		//return (y > 0.6 * delta) ? (- 0.59 * y + 0.64 * delta) : (0.31 * y + 0.1 * delta);
 	}
 
+	void print_all_fields(const size_t& _ID, const std::string _filename) {
+		print_flucts(_ID, _filename);
+
+		std::ofstream output;
+		output.open(_filename + "_Tprime_" + std::to_string(_ID) + ".txt");
+		for (size_t j{ 0 }; j < T_prime.shape[0]; j++) {
+			for (size_t k{ 0 }; k < T_prime.shape[1]-1; k++) {
+				output << T_prime(j, k) << ",";
+			}
+			output << T_prime(j, T_prime.shape[1] - 1) << std::endl;
+		}
+	}
+
 	
 private:
 	double u_temp;
@@ -124,10 +157,12 @@ private:
 		std::uniform_real_distribution<double> x_dist = std::uniform_real_distribution<double>(x_min, x_max);
 
 		for (size_t i{ 0 }; i < eddies.size; i++) {
-			eddies(i) = ISEM1_eddy(800);
+			//std::cout << i << std::endl;
+			eddies(i) = ISEM1_eddy(10000);
 
 			x_temp = x_dist(mt);
 			y_temp = y_rand(mt);
+			//std::cout << y_temp << std::endl;
 			z_temp = z_rand(mt);
 			radius_temp = compute_radius(y_temp, z_temp);
 			u_temp = velocity_fn(y_temp, z_temp);

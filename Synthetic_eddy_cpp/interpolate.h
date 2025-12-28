@@ -26,8 +26,8 @@ struct interpolator {
 		T err;
 		T err_prev;
 
-		assert(value > x(0));
-		assert(value < x(x.size - 1));
+		assert(value >= x(0));
+		assert(value <= x(x.size - 1));
 
 		err_prev = value - x(0);
 

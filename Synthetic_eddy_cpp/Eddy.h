@@ -21,8 +21,8 @@
 // for sub classes of eddy: shape functions need to be implemented, reset functions need to be implemented
 struct eddy {
 public:
-    Array<double> position;
-    Array<int> epsilon; // -1 or 1
+    double position[3];
+    int epsilon[3]; // -1 or 1
     double shape_scaling_factor; // scaling factor in shape function
     //double radius; radius should now be a member variable declared in each sub version of eddy
     double shape;
@@ -38,24 +38,26 @@ public:
     double theta_magn;
 
     eddy() {
-        position = Array<double>({ 3 });
-        epsilon = Array<int>({ 3 });
+        //position = Array<double>({ 3 });
+        //epsilon = Array<int>({ 3 });
         nodes.resize({ 1, 2 });
         nodes_pos.resize({ 1, 2 });
         num_nodes = 0;
     }
 
     eddy(const size_t& max_nodes) {
-        position = Array<double>({ 3 });
-        epsilon = Array<int>({ 3 });
+        //position = Array<double>({ 3 });
+        //epsilon = Array<int>({ 3 });
         nodes.resize({ max_nodes, 2 });
         nodes_pos.resize({ max_nodes, 2 });
         num_nodes = 0;
     }
 
     bool convect(const double& x_max) {
-        position(0) += increment;
-        return (position(0) < x_max) ? true : false;
+        //std::cout << "initial pos: " << position[0];
+        position[0] += increment;
+        //std::cout << ", aft pos: " << position[0] << ", increment: " << increment << std::endl;
+        return (position[0] < x_max) ? true : false;
     }
 
     /*

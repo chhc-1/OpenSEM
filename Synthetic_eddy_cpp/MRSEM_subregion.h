@@ -56,12 +56,16 @@ public:
 
 		//std::cout << (z_max - z_min) * (y_max - y_min) << ", " << z_max << ", " << z_min << ", "
 		//	<< y_max << ", " << y_min << ", " << ly << ", " << lz << std::endl;
-		
+		double yd = y_max - y_min;
 		size_t N = trunc((z_max - z_min) * (y_max - y_min) / (4 * ly * lz));
+		//size_t N = trunc(std::max((z_max - z_min) / (2 * lz), 1.0) * std::max((y_max - y_min) / (2 * ly), 1.0));
 		eddies.resize({ N });
 		vf_scaling_factor = 1 / sqrt(N);
 		vf_scaling_factor = 1 / pow(N, 0.065);
-		//vf_scaling_factor = 1;
+		//vf_scaling_factor = 1 / sqrt(sqrt((std::max((2*lz)/(z_max-z_min), 1.0) * std::max((2*ly)/(y_max-y_min), 1.0))));
+		//vf_scaling_factor = 0.5 * yd < ly ? 2 * sqrt(yd / ly) : 1;
+		
+		vf_scaling_factor = 1;
 		//vf_scaling_factor = 1; // vf scaling factor deals with probability in y, z direction?
 
 		t = 0;
@@ -73,7 +77,8 @@ public:
 	}
 
 	void increment_eddies(Array<double>& uprime, Array<double>& vprime, Array<double>& wprime,
-		const Array<double>& _y_inlet, const Array<double>& _z_inlet) {
+		const Array<double>& _y_inlet, const Array<double>& _z_inlet, const Array<double>& _a11, const Array<double>& _a21,
+		const Array<double>& _a22, const Array<double>& _a31, const Array<double>& _a32, const Array<double>& _a33) {
 		t += dt;
 
 		//u_prime.set(0);
@@ -81,7 +86,7 @@ public:
 		//w_prime.set(0);
 
 		for (size_t idx{ 0 }; idx < eddies.size; idx++) {
-			increment_eddy(eddies(idx), uprime, vprime, wprime, _y_inlet, _z_inlet);
+			increment_eddy(eddies(idx), uprime, vprime, wprime, _y_inlet, _z_inlet, _a11, _a21, _a22, _a31, _a32, _a33);
 			//std::cout << eddies(idx).num_nodes << std::endl;
 			//std::cout << "in subregion " << idx << std::endl;
 		}
@@ -94,14 +99,15 @@ public:
 	}
 
 	void increment_eddy(MRSEM_eddy& _eddy, Array<double>& uprime, Array<double>& vprime, Array<double>& wprime,
-		const Array<double>& _y_inlet, const Array<double>& _z_inlet) {
+		const Array<double>& _y_inlet, const Array<double>& _z_inlet, const Array<double>& _a11, const Array<double>& _a21,
+		const Array<double>& _a22, const Array<double>& _a31, const Array<double>& _a32, const Array<double>& _a33) {
 		bool in_box = _eddy.convect(t);
 
 		if (not in_box) {
 			//reset(_eddy);
 			reset(_eddy, _y_inlet, _z_inlet);
 		}
-		
+
 		for (size_t idx{ 0 }; idx < _eddy.num_nodes; idx++) {
 			t_abs = (t - (_eddy.position[0] + _eddy.radius[0])) / _eddy.radius[0];
 			y_abs = (_eddy.nodes_pos(idx, 0) - _eddy.position[1]) / _eddy.radius[1];
@@ -126,12 +132,20 @@ public:
 				_eddy.shape[1] = 0;
 				_eddy.shape[2] = 0;
 			}
-			
 
-			uprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[0]) * _eddy.shape[0];
-			vprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[1]) * _eddy.shape[1];
-			wprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[2]) * _eddy.shape[2];
-			
+
+			//uprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[0]) * _eddy.shape[0];
+			//vprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[1]) * _eddy.shape[1];
+			//wprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (double)(_eddy.epsilon[2]) * _eddy.shape[2];
+
+			// edit to include Cholesky decomp terms
+			uprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * _a11(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) * (double)(_eddy.epsilon[0]) * _eddy.shape[0];
+			vprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (_a21(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) * _eddy.epsilon[0] 
+				+ _a22(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) * (_eddy.epsilon[1])) * _eddy.shape[1];
+			wprime(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) += vf_scaling_factor * (_a31(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) * _eddy.epsilon[0] + 
+				_a32(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) * _eddy.epsilon[1] + _a33(_eddy.nodes(idx, 0), _eddy.nodes(idx, 1)) * (_eddy.epsilon[2])) * _eddy.shape[2];
+
+
 			//for (size_t idx2{ 0 }; idx2 < 3; idx2++) {
 			//	if (std::abs(_eddy.shape[idx2]) > 1) {
 			//		std::cout << t << ", " << idx2 << ", " << _eddy.shape[idx2] << std::endl;
@@ -143,7 +157,7 @@ public:
 		for (size_t idx{ 0 }; idx < _y_inlet.size; idx++) {
 			// eval normalised variables  (x, y, z) or (t, y, z)
 			// eval shape function
-			
+
 			_eddy.shape[0] = shape_t[0](t, _eddy.position[0] + _eddy.radius[0], _eddy.radius[0]);
 			_eddy.shape[0] *= shape_t[1](_y_inlet(idx), _eddy.position[1], _eddy.radius[1]);
 			_eddy.shape[0] *= shape_t[2](_z_inlet(idx), _eddy.position[2], _eddy.radius[2]);
@@ -165,7 +179,7 @@ public:
 			//u_prime(idx) += a11(idx) * _eddy.epsilon(0) * _eddy.shape[0];
 			//v_prime(idx) += (a21(idx) * _eddy.epsilon(0)+ a22(idx) * _eddy.epsilon(1)) * _eddy.shape[1];
 			//w_prime(idx) += (a31(idx) * _eddy.epsilon(0) + a32(idx) * _eddy.epsilon(1) + a33(idx) * _eddy.epsilon(2))* _eddy.shape[2];
-			
+
 			uprime(idx) += (double)(_eddy.epsilon[0]) * _eddy.shape[0];
 			vprime(idx) += (double)(_eddy.epsilon[1]) * _eddy.shape[1];
 			wprime(idx) += (double)(_eddy.epsilon[2]) * _eddy.shape[2];

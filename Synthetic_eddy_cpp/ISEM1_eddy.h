@@ -18,6 +18,7 @@
 struct ISEM1_eddy : public eddy {
 public:
 	double radius;
+	//double position[3];
 
 	ISEM1_eddy()
 		: eddy()
@@ -26,19 +27,20 @@ public:
 	}
 
 	ISEM1_eddy(const size_t& max_nodes)
-		: eddy(max_nodes)
+		: eddy(20000)//20000)
 	{
 
 	}
 
 	void reset(const double& new_x, const double& new_y, const double& new_z, const double& new_r, const double& volume_sqrt, const double& u, const double& dt, const Array<double>& y_plane, const Array<double>& z_plane, const Array<int>& _eps) {
 		// reset eddy position
-		position(0) = new_x;
-		position(1) = new_y;
-		position(2) = new_z;
+		position[0] = new_x;
+		position[1] = new_y;
+		position[2] = new_z;
 		radius = new_r;
 		shape_scaling_factor = volume_sqrt / pow(new_r, 1.5);
 		increment = u * dt;
+		//std::cout << increment << std::endl;
 
 		// insert nodes that need to be checked now
 		// nodes.set(0);
@@ -58,7 +60,7 @@ public:
 		}
 
 		for (size_t j{ 0 }; j < 3; j++) {
-			epsilon(j) = _eps(j);
+			epsilon[j] = _eps(j);
 		}
 	}
 

@@ -229,7 +229,7 @@ public:
 		}
 		output.close();
 
-		output.open(current_dir + "/uprime/" + file_name + "_vprime_" + std::to_string(ID) + ".txt");
+		output.open(current_dir + "/vprime/" + file_name + "_vprime_" + std::to_string(ID) + ".txt");
 		for (size_t j{ 0 }; j < y_inlet.shape[0]; j++) {
 			for (size_t i{ 0 }; i < y_inlet.shape[1] - 1; i++) {
 				output << v_prime(j, i) << ",";
@@ -238,7 +238,7 @@ public:
 		}
 		output.close();
 
-		output.open(current_dir + "/uprime/" + file_name + "_wprime_" + std::to_string(ID) + ".txt");
+		output.open(current_dir + "/wprime/" + file_name + "_wprime_" + std::to_string(ID) + ".txt");
 		for (size_t j{ 0 }; j < y_inlet.shape[0]; j++) {
 			for (size_t i{ 0 }; i < y_inlet.shape[1] - 1; i++) {
 				output << w_prime(j, i) << ",";
