@@ -2,9 +2,9 @@
 
 WIP library for testing various Synthetic Eddy methods for turbulent inflow. Synthetic eddy methods currently in package (and may not be complete):
 
-- Original Synthetic Eddy method (oSEM) (Jarrin et al. 2006) [1]
+- Original Synthetic eddy method (oSEM) (Jarrin et al. 2006) [1]
 
-- Improved Synthetic Eddy method (ISEM) (Xiong et al. 2022) [2]
+- Improved Synthetic eddy method (ISEM) (Xiong et al. 2022) [2]
 
 - Multi-region Synthetic eddy method (MRSEM) (Pamiès et al. 2009) [3]
 
