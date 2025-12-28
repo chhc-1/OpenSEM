@@ -1,17 +1,18 @@
 # Synthetic_eddy_cpp
 
-WIP library for testing various Synthetic Eddy methods for turbulent inflow. Current implementations:
+WIP library for testing various Synthetic Eddy methods for turbulent inflow. Synthetic eddy methods currently in package (and may not be complete):
 
-Original Synthetic Eddy method (oSEM) (Jarrin et al. 2006) [1]
+- Original Synthetic Eddy method (oSEM) (Jarrin et al. 2006) [1]
 
-Improved Synthetic Eddy method (ISEM) (Xiong et al. 2024) [2]
+- Improved Synthetic Eddy method (ISEM) (Xiong et al. 2024) [2]
 
-Multi-region Synthetic eddy method (MRSEM) (Pamiès et al. 2009) [3]
+- Multi-region Synthetic eddy method (MRSEM) (Pamiès et al. 2009) [3]
 
-Divergence-free Synthetic eddy method (DFSEM) (Poletto 2013) [4]
+- Divergence-free Synthetic eddy method (DFSEM) (Poletto 2013) [4]
+
 Note that the DFSEM implemented has only been tested with an isotropic Reynold's Stress Tensor and only works with a very limited range of Reynold's Stress Tensors. (Corresponds to DFSEMiso from [4])
 
-## References for Synthetic eddy methods
+### References for Synthetic eddy methods
 
 [1] N. Jarrin, S. Benhamadouche, D. Laurence, and R. Prosser. A synthetic-eddy-method for generating inflow conditions for large-eddy simulations. International Journal of Heat and Fluid Flow, vol. 27, no. 4, pp. 585–593, 2006.
 
