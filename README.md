@@ -10,7 +10,7 @@ WIP library for testing various Synthetic Eddy methods for turbulent inflow. Syn
 
 - Divergence-free Synthetic eddy method (DFSEM) (Poletto 2013) [4]
 
-Note that the DFSEM implemented has only been tested with an isotropic Reynold's Stress Tensor and only works with a very limited range of Reynold's Stress Tensors. (Corresponds to DFSEMiso from [4])
+Note that the DFSEM implemented has only been tested with an isotropic Reynold's Stress Tensor and should only work with a very limited range of Reynold's Stress Tensors. (Corresponds to DFSEMiso from [4])
 
 ### References for Synthetic eddy methods
 
