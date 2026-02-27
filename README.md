@@ -10,6 +10,10 @@ WIP library for testing various Synthetic Eddy methods for turbulent inflow. Syn
 
 - Divergence-free Synthetic eddy method (DFSEM) (Poletto 2013) [4]
 
+Data for the Reynold's Stress Tensors is from the NASA Turbulence Modelling Resource page [5].
+
+ISEM is currently bugged - it should not generate the correct Reynold's Stress Tensor. See https://github.com/chhc-1/OPS_OpenSEM for fix.
+
 Note that the DFSEM implemented has only been tested with an isotropic Reynold's Stress Tensor and should only work with a very limited range of Reynold's Stress Tensors. (Corresponds to DFSEMiso from [4])
 
 ### References for Synthetic eddy methods
@@ -20,4 +24,6 @@ Note that the DFSEM implemented has only been tested with an isotropic Reynold's
 
 [3] M. Pamiès, P.-É. Weiss, É. Garnier, S. Deck, and P. Sagaut. Generation of synthetic turbulent inflow data for large eddy simulation of spatially evolving wall-bounded flows. Physics of Fluids, vol. 21, no. 4, 2009.
 
-[4] R. Poletto. Divergence free development of the syntehtic eddy method in order to improve synthetic turbulence for embedded LES simulations. PhD thesis, University of Manchester, 2013.
+[4] R. Poletto. Divergence free development of the synthetic eddy method in order to improve synthetic turbulence for embedded LES simulations. PhD thesis, University of Manchester, 2013.
+
+[5] L. Duan. DNS: Supersonic/Hypersonic Zero-Pressure-Gradient Plate Flows. Turbulence Modelling Resource, NASA, 2018
